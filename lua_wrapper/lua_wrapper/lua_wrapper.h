@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 /* 
 version: 0.1
@@ -12,10 +12,10 @@ version: 0.1
 
 SHARELIB_BEGIN_NAMESPACE
 
-//----luaµ÷ÓÃC++µÄ×ª½Ó¸¨Öú---------------------------------------------
+//----luaè°ƒç”¨C++çš„è½¬æ¥è¾…åŠ©---------------------------------------------
 namespace Internal
 {
-//----¼ì²é¹©luaµ÷ÓÃµÄCº¯Êı²ÎÊıÊÇ·ñºÏ·¨-----------------------------
+//----æ£€æŸ¥ä¾›luaè°ƒç”¨çš„Cå‡½æ•°å‚æ•°æ˜¯å¦åˆæ³•-----------------------------
     template<class ...T>
     struct CheckCFuncArgValid;
 
@@ -28,7 +28,7 @@ namespace Internal
     struct CheckCFuncArgValid<T, Rest...>
         : public CheckCFuncArgValid<Rest...>
     {
-        //²»ÄÜ°üº¬×óÖµÒıÓÃµÄ²ÎÊı
+        //ä¸èƒ½åŒ…å«å·¦å€¼å¼•ç”¨çš„å‚æ•°
         static_assert(!std::is_lvalue_reference<T>::value 
         || std::is_const<std::remove_reference_t<T>>::value,
         "unsupport left value reference parameter");
@@ -40,25 +40,25 @@ namespace Internal
     {
     };
 
-//----·ÖÆÕÍ¨º¯Êı, ³ÉÔ±º¯Êı, ³ÉÔ±±äÁ¿ ·µ»ØÖµÊÇ·ñÎªvoid, Çø·Öµ÷ÓÃ------------------------------------------
+//----åˆ†æ™®é€šå‡½æ•°, æˆå‘˜å‡½æ•°, æˆå‘˜å˜é‡ è¿”å›å€¼æ˜¯å¦ä¸ºvoid, åŒºåˆ†è°ƒç”¨------------------------------------------
 
-    /** luaµ÷ÓÃ·Ö·¢Æ÷
-    @Tparam[in] callId: ³£Á¿Öµ, ±íÊ¾µ÷ÓÃÀàĞÍ
-    @Tparam[in] returnVoid: ³£Á¿Öµ, ±íÊ¾·µ»ØÀàĞÍÊÇ·ñÎªvoid
-    @Tparam[in] _CallableType: CallableTypeHelperÀàÀàĞÍ
-    @Tparam[in] _IndexType: ²ÎÊıĞòÁĞºÅ
+    /** luaè°ƒç”¨åˆ†å‘å™¨
+    @Tparam[in] callId: å¸¸é‡å€¼, è¡¨ç¤ºè°ƒç”¨ç±»å‹
+    @Tparam[in] returnVoid: å¸¸é‡å€¼, è¡¨ç¤ºè¿”å›ç±»å‹æ˜¯å¦ä¸ºvoid
+    @Tparam[in] _CallableType: CallableTypeHelperç±»ç±»å‹
+    @Tparam[in] _IndexType: å‚æ•°åºåˆ—å·
     */
     template<CallableIdType callId, bool returnVoid, class _CallableType, class _IndexType>
     struct luaCFunctionDispatcher;
 
-    //Ä£°åÌØ»¯, º¯ÊıÖ¸Õë, ·µ»Øvoid
+    //æ¨¡æ¿ç‰¹åŒ–, å‡½æ•°æŒ‡é’ˆ, è¿”å›void
     template<class _CallableType, size_t ... index>
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, ArgIndex<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType pf)
         {
-            (void)pLua;//Ïû³ı0²Î0·µ»ØÖµÊ±µÄ¾¯¸æ
+            (void)pLua;//æ¶ˆé™¤0å‚0è¿”å›å€¼æ—¶çš„è­¦å‘Š
             pf(lua_io_dispatcher<
                 std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
                 >::from_lua(pLua, index + 1)...);
@@ -66,7 +66,7 @@ namespace Internal
         }
     };
 
-    //Ä£°åÌØ»¯, º¯ÊıÖ¸Õë, ÓĞ·µ»ØÖµ
+    //æ¨¡æ¿ç‰¹åŒ–, å‡½æ•°æŒ‡é’ˆ, æœ‰è¿”å›å€¼
     template<class _CallableType, size_t ... index>
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, ArgIndex<index...> >
     {
@@ -83,7 +83,7 @@ namespace Internal
         }
     };
 
-    //Ä£°åÌØ»¯, ³ÉÔ±º¯ÊıÖ¸Õë, ·µ»Øvoid
+    //æ¨¡æ¿ç‰¹åŒ–, æˆå‘˜å‡½æ•°æŒ‡é’ˆ, è¿”å›void
     template<class _CallableType, size_t ... index>
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, ArgIndex<index...> >
     {
@@ -103,7 +103,7 @@ namespace Internal
         }
     };
 
-    //Ä£°åÌØ»¯, ³ÉÔ±º¯ÊıÖ¸Õë, ÓĞ·µ»ØÖµ
+    //æ¨¡æ¿ç‰¹åŒ–, æˆå‘˜å‡½æ•°æŒ‡é’ˆ, æœ‰è¿”å›å€¼
     template<class _CallableType, size_t ... index>
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, ArgIndex<index...> >
     {
@@ -130,7 +130,7 @@ namespace Internal
         }
     };
 
-    //Ä£°åÌØ»¯, ³ÉÔ±±äÁ¿Ö¸Õë
+    //æ¨¡æ¿ç‰¹åŒ–, æˆå‘˜å˜é‡æŒ‡é’ˆ
     template<class _CallableType>
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, ArgIndex<> >
     {
@@ -155,13 +155,13 @@ namespace Internal
         }
     };
 
-//----lua Cº¯ÊıµÄÊÊÅäº¯ÊıÈë¿Ú----------------------------------------
+//----lua Cå‡½æ•°çš„é€‚é…å‡½æ•°å…¥å£----------------------------------------
 
-    //luaµ÷ÓÃCµÄÖ÷º¯Êı,ËùÓĞµÄC++µ÷ÓÃ¶¼´ÓÕâÀï×ª·¢³öÈ¥
+    //luaè°ƒç”¨Cçš„ä¸»å‡½æ•°,æ‰€æœ‰çš„C++è°ƒç”¨éƒ½ä»è¿™é‡Œè½¬å‘å‡ºå»
     template<class _FuncType>
     int MainLuaCFunctionCall(lua_State * pLua)
     {
-        //upvalueÖĞµÚÒ»¸öÖµ¹Ì¶¨ÎªÕæÊµÖ´ĞĞµÄµ÷ÓÃÖ¸Õë
+        //upvalueä¸­ç¬¬ä¸€ä¸ªå€¼å›ºå®šä¸ºçœŸå®æ‰§è¡Œçš„è°ƒç”¨æŒ‡é’ˆ
         void * ppf = lua_touserdata(pLua, lua_upvalueindex(1));
         assert(ppf);
         assert(*(_FuncType*)ppf);
@@ -180,34 +180,34 @@ namespace Internal
     }
 }
 
-/** ÏòÕ»ÉÏÑ¹ÈëC++µ÷ÓÃ(Ö§³Öº¯ÊıÖ¸Õë,³ÉÔ±º¯ÊıÖ¸Õë,³ÉÔ±±äÁ¿Ö¸Õë).
-luaµ÷ÓÃC++µÄ³ÉÔ±º¯Êı»ò³ÉÔ±±äÁ¿Ê±, µÚÒ»¸ö²ÎÊı±ØĞë´«C++¶ÔÏóÖ¸Õë, Ê£ÏÂµÄ²ÎÊıÓë¸Ã³ÉÔ±º¯ÊıµÄ²ÎÊıÏàÍ¬, ³ÉÔ±±äÁ¿µ÷ÓÃÔòÃ»ÓĞÆäËü²ÎÊı.
-Èç¹ûC++µ÷ÓÃµÄ²ÎÊıÁĞ±íÖĞÓĞÄ¬ÈÏÖµ, Ä¬ÈÏÖµ²»»áÉúĞ§.
-@param[in,out] pLua lua×´Ì¬Ö¸Õë
-@param[in] pf C++µ÷ÓÃÖ¸Õë, Ä¿Ç°²»Ö§³Ö²ÎÊıÖĞµÄ×óÖµÒıÓÃµÄµ÷ÓÃÀàĞÍ
+/** å‘æ ˆä¸Šå‹å…¥C++è°ƒç”¨(æ”¯æŒå‡½æ•°æŒ‡é’ˆ,æˆå‘˜å‡½æ•°æŒ‡é’ˆ,æˆå‘˜å˜é‡æŒ‡é’ˆ).
+luaè°ƒç”¨C++çš„æˆå‘˜å‡½æ•°æˆ–æˆå‘˜å˜é‡æ—¶, ç¬¬ä¸€ä¸ªå‚æ•°å¿…é¡»ä¼ C++å¯¹è±¡æŒ‡é’ˆ, å‰©ä¸‹çš„å‚æ•°ä¸è¯¥æˆå‘˜å‡½æ•°çš„å‚æ•°ç›¸åŒ, æˆå‘˜å˜é‡è°ƒç”¨åˆ™æ²¡æœ‰å…¶å®ƒå‚æ•°.
+å¦‚æœC++è°ƒç”¨çš„å‚æ•°åˆ—è¡¨ä¸­æœ‰é»˜è®¤å€¼, é»˜è®¤å€¼ä¸ä¼šç”Ÿæ•ˆ.
+@param[in,out] pLua luaçŠ¶æ€æŒ‡é’ˆ
+@param[in] pf C++è°ƒç”¨æŒ‡é’ˆ, ç›®å‰ä¸æ”¯æŒå‚æ•°ä¸­çš„å·¦å€¼å¼•ç”¨çš„è°ƒç”¨ç±»å‹
 */
 template<class _FuncType>
 void push_cpp_callable_to_lua(lua_State * pLua, _FuncType pf)
 {
-    //_FuncType ´«Öµ, ×Ô¶¯°Ñº¯Êı×ª³ÉÖ¸Ïòº¯ÊıµÄÖ¸Õë
+    //_FuncType ä¼ å€¼, è‡ªåŠ¨æŠŠå‡½æ•°è½¬æˆæŒ‡å‘å‡½æ•°çš„æŒ‡é’ˆ
     assert(pf);
     ::luaL_checkstack(pLua, 1, "too many upvalues");
     void * ppf = lua_newuserdata(pLua, sizeof(pf));
     assert(ppf);
-    //°Ñµ÷ÓÃÖ¸ÕëĞ´Èëupvalue
+    //æŠŠè°ƒç”¨æŒ‡é’ˆå†™å…¥upvalue
     std::memcpy(ppf, &pf, sizeof(pf));
     ::lua_pushcclosure(pLua, Internal::MainLuaCFunctionCall<_FuncType>, 1);
 }
 
 
-//----luaµ÷ÓÃC++µÄÓ³ÉäÊµÏÖºê---------------------------------------------
-/* ÕâÈı¸öºêÊµÏÖÁËÒ»¸öº¯Êı, ÓÃÀ´Íê³Éluaµ÷ÓÃC++µÄÓ³Éä, ´´½¨lua_Stateºó, µ÷ÓÃ¸Ãº¯Êı,
-¾Í°ÑÕâĞ©C++µ÷ÓÃÓëlua¹ØÁªÆğÀ´ÁË.
+//----luaè°ƒç”¨C++çš„æ˜ å°„å®ç°å®---------------------------------------------
+/* è¿™ä¸‰ä¸ªå®å®ç°äº†ä¸€ä¸ªå‡½æ•°, ç”¨æ¥å®Œæˆluaè°ƒç”¨C++çš„æ˜ å°„, åˆ›å»ºlua_Stateå, è°ƒç”¨è¯¥å‡½æ•°,
+å°±æŠŠè¿™äº›C++è°ƒç”¨ä¸luaå…³è”èµ·æ¥äº†.
 */
 
-/** ¶¨ÒåÒ»¸ö×¢²áº¯Êı
-@param[in] registerFuncName: ×¢²áº¯ÊıµÄÃû×Ö, ²»¼ÓÒıºÅ
-@param[in] pLibName: ¿âÃû×Ö, const char *
+/** å®šä¹‰ä¸€ä¸ªæ³¨å†Œå‡½æ•°
+@param[in] registerFuncName: æ³¨å†Œå‡½æ•°çš„åå­—, ä¸åŠ å¼•å·
+@param[in] pLibName: åº“åå­—, const char *
 */
 #define BEGIN_LUA_CPP_MAP_IMPLEMENT(registerFuncName, pLibName) \
 void registerFuncName(lua_State * pLua) \
@@ -218,21 +218,21 @@ void registerFuncName(lua_State * pLua) \
     shr::lua_stack_check stackChecker(pLua); \
     ::lua_newtable(pLua); 
 
-/** Ìí¼ÓÒ»¸öC++µ÷ÓÃµ½lua, ²¢ÇÒÓëÒ»¸ö×Ö·û´®¹ØÁªÆğÀ´
-@param[in] luaFuncName: lua½Å±¾ÖĞµ÷ÓÃÊ±ËùÓÃµÄÃû×Ö, const char *
-@param[in] cppCallable: C++µ÷ÓÃÖ¸Õë, ÓÉpush_cpp_callable_to_luaÊµÏÖ,¾ßÌåÏŞÖÆ²ÎÕÕ¸Ãº¯Êı×¢ÊÍ
+/** æ·»åŠ ä¸€ä¸ªC++è°ƒç”¨åˆ°lua, å¹¶ä¸”ä¸ä¸€ä¸ªå­—ç¬¦ä¸²å…³è”èµ·æ¥
+@param[in] luaFuncName: luaè„šæœ¬ä¸­è°ƒç”¨æ—¶æ‰€ç”¨çš„åå­—, const char *
+@param[in] cppCallable: C++è°ƒç”¨æŒ‡é’ˆ, ç”±push_cpp_callable_to_luaå®ç°,å…·ä½“é™åˆ¶å‚ç…§è¯¥å‡½æ•°æ³¨é‡Š
 */
 #define ENTRY_LUA_CPP_MAP_IMPLEMENT(luaFuncName, cppCallable) \
     shr::push_cpp_callable_to_lua(pLua, cppCallable); \
     ::lua_setfield(pLua, -2, luaFuncName);
 
-/** ½áÊø×¢²áº¯Êı
+/** ç»“æŸæ³¨å†Œå‡½æ•°
 */
 #define END_LUA_CPP_MAP_IMPLEMENT() \
     ::lua_setglobal(pLua, pLib); \
 }
 
-//----lua_StateµÄ·â×°Àà---------------------------------------------------------
+//----lua_Stateçš„å°è£…ç±»---------------------------------------------------------
 
 class lua_state_wrapper
 {
@@ -251,13 +251,13 @@ public:
 	lua_State* get_raw_state();
 	operator lua_State*();
 
-/* Ò»°ãµÄ²Ù×÷Á÷³Ì£º
-ÏÈÉèÖÃ±äÁ¿¡¢Cº¯ÊıµÈ£¬ÔÙÖ´ĞĞ½Å±¾£¬×îºó»ñÈ¡±äÁ¿
+/* ä¸€èˆ¬çš„æ“ä½œæµç¨‹ï¼š
+å…ˆè®¾ç½®å˜é‡ã€Cå‡½æ•°ç­‰ï¼Œå†æ‰§è¡Œè„šæœ¬ï¼Œæœ€åè·å–å˜é‡
 */
 
-//----Ö´ĞĞ½Å±¾Ç°µÄ²Ù×÷£º---------------------------------
+//----æ‰§è¡Œè„šæœ¬å‰çš„æ“ä½œï¼š---------------------------------
 
-    //ÍùluaÖĞĞ´ÈëÈ«¾Ö±äÁ¿
+    //å¾€luaä¸­å†™å…¥å…¨å±€å˜é‡
     template<class T>
     void set_variable(const char * pName, T value)
     {
@@ -270,37 +270,37 @@ public:
         }
     }
 
-    //´ÓluaÖĞ·ÖÅäÒ»¿éÃüÃûÄÚ´æ, ·µ»ØÄÚ´æµØÖ·, Õ»±£³Ö²»±ä
+    //ä»luaä¸­åˆ†é…ä¸€å—å‘½åå†…å­˜, è¿”å›å†…å­˜åœ°å€, æ ˆä¿æŒä¸å˜
     void * alloc_user_data(const char * pName, size_t size);
 
-//----Ö´ĞĞ½Å±¾----------------------------
+//----æ‰§è¡Œè„šæœ¬----------------------------
 
-    //ÏÂÃæÁ½¸ö,¼ÓÔØ²¢Ö´ĞĞ, ¼ÓÔØµÄÊ±¼ä´ú¼Û: ºÁÃëÁ¿¼¶
+    //ä¸‹é¢ä¸¤ä¸ª,åŠ è½½å¹¶æ‰§è¡Œ, åŠ è½½çš„æ—¶é—´ä»£ä»·: æ¯«ç§’é‡çº§
     bool do_lua_file(const char * pFileName);
     bool do_lua_string(const char * pString);
 
-    //ÏÂÃæÁ½¸ö,Ö»¼ÓÔØ²»Ö´ĞĞ,¶øºó¿ÉÒÔ¶à´ÎÖ´ĞĞ£¬run(),Á½ÖÖÀàĞÍµÄÖ´ĞĞ½Å±¾·½·¨²»¿É»ìÓÃ.
+    //ä¸‹é¢ä¸¤ä¸ª,åªåŠ è½½ä¸æ‰§è¡Œ,è€Œåå¯ä»¥å¤šæ¬¡æ‰§è¡Œï¼Œrun(),ä¸¤ç§ç±»å‹çš„æ‰§è¡Œè„šæœ¬æ–¹æ³•ä¸å¯æ··ç”¨.
     bool load_lua_file(const char * pFileName);
     bool load_lua_string(const char * pString);
 
-    /* Ö´ĞĞ.
-    ±¾ÖÊÉÏÊÇ°Ñ¼ÓÔØµÄlua½Å±¾×ª±ä³Éluaº¯Êı,Òò´Ë¶à´ÎÖ´ĞĞµÄluaÉÏÏÂÎÄÊÇÏàÍ¬µÄ. ±ÈÈç, Ò»¸öÈ«¾Ö±äÁ¿³õÊ¼Îª0£¬
-    µÚÒ»´ÎÖ´ĞĞ°ÑËü¼Ó1£¬ÄÇÃ´µÚ¶ş´ÎÖ´ĞĞÊ±Ëü¾ÍÊÇ1£¬¶ø²»ÊÇ³õÊ¼Öµ0.
+    /* æ‰§è¡Œ.
+    æœ¬è´¨ä¸Šæ˜¯æŠŠåŠ è½½çš„luaè„šæœ¬è½¬å˜æˆluaå‡½æ•°,å› æ­¤å¤šæ¬¡æ‰§è¡Œçš„luaä¸Šä¸‹æ–‡æ˜¯ç›¸åŒçš„. æ¯”å¦‚, ä¸€ä¸ªå…¨å±€å˜é‡åˆå§‹ä¸º0ï¼Œ
+    ç¬¬ä¸€æ¬¡æ‰§è¡ŒæŠŠå®ƒåŠ 1ï¼Œé‚£ä¹ˆç¬¬äºŒæ¬¡æ‰§è¡Œæ—¶å®ƒå°±æ˜¯1ï¼Œè€Œä¸æ˜¯åˆå§‹å€¼0.
     */
     bool run();
 
-    // »ñÈ¡±àÒëÊ§°ÜµÄ´íÎóĞÅÏ¢,×¢Òâ£ºµ±Ê§°ÜµÄÊ±ºò²Åµ÷ÓÃ
+    // è·å–ç¼–è¯‘å¤±è´¥çš„é”™è¯¯ä¿¡æ¯,æ³¨æ„ï¼šå½“å¤±è´¥çš„æ—¶å€™æ‰è°ƒç”¨
     std::string get_error_msg();
 
-//----Ö´ĞĞ½Å±¾ºóµÄ²Ù×÷-----------------------------
+//----æ‰§è¡Œè„šæœ¬åçš„æ“ä½œ-----------------------------
 
-    //»ñÈ¡Õ»ÖĞÊı¾İµÄ¸öÊı
+    //è·å–æ ˆä¸­æ•°æ®çš„ä¸ªæ•°
     int get_stack_count();
 
-    // »ñÈ¡Õ»ÉÏÔªËØµÄ´óĞ¡£¬×Ö·û´®£º³¤¶È£» table£º¸öÊı£»userdata£ºsize
+    // è·å–æ ˆä¸Šå…ƒç´ çš„å¤§å°ï¼Œå­—ç¬¦ä¸²ï¼šé•¿åº¦ï¼› tableï¼šä¸ªæ•°ï¼›userdataï¼šsize
     size_t get_size(int index);
 
-    //´ÓluaÖĞ¶ÁÈ¡È«¾Ö±äÁ¿
+    //ä»luaä¸­è¯»å–å…¨å±€å˜é‡
     template<class T>
     T get_variable(const char * pName, T defaultValue = T{})
     {

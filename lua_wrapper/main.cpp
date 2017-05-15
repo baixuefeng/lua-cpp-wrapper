@@ -1,4 +1,4 @@
-// lua_wrapper.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
+ï»¿// lua_wrapper.cpp : å®šä¹‰æ§åˆ¶å°åº”ç”¨ç¨‹åºçš„å…¥å£ç‚¹ã€‚
 //
 #include "lua_wrapper/lua_wrapper.h"
 #include <iostream>

@@ -1,4 +1,4 @@
-#include "lua_iostream.h"
+﻿#include "lua_iostream.h"
 
 SHARELIB_BEGIN_NAMESPACE
 
@@ -111,7 +111,7 @@ void lua_ostream::check_table_push()
         auto nOffset = lua_gettop(m_pLua) - m_tableIndex;
         if (nOffset == 1)
         {
-            //û��key
+            //没有key
             lua_rawseti(m_pLua, m_tableIndex, lua_rawlen(m_pLua, m_tableIndex) + 1);
         }
         else
@@ -296,6 +296,7 @@ lua_istream & lua_istream::operator>>(lua_table_key_t key)
 
 void shr::lua_istream::cleanup_subtable(lua_istream & subTable)
 {
+    (void)subTable;
     assert(!m_isEof);
     assert(lua_type(m_pLua, m_stackIndex) == LUA_TTABLE);
     assert(lua_type(subTable.m_pLua, subTable.m_stackIndex) == LUA_TTABLE);

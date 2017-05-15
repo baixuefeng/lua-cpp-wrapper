@@ -1,16 +1,16 @@
-#pragma once
+﻿#pragma once
 #include <cassert>
 #include "lua/src/lua.hpp"
 #include "MacroDefBase.h"
 
-//lua�ű�ʹ�õı���, ���ʹ��utf8, ����ú�. δ����ʱĬ��ΪASCII����
+//lua脚本使用的编码, 如果使用utf8, 定义该宏. 未定义时默认为ASCII编码
 //#define LUA_CODE_UTF8
 
 SHARELIB_BEGIN_NAMESPACE
 
-//----luaջ�����ĸ�����-------------------------------------------------------------
+//----lua栈保护的辅助类-------------------------------------------------------------
 
-//���ջԪ�������Ƿ����ĸ�����,�����Զ����������Ԫ�أ�ֻ��debugģʽ��Ч
+//检查栈元素数量是否变更的辅助类,不会自动弹出多出的元素，只有debug模式有效
 class lua_stack_check
 {
 public:
@@ -36,7 +36,7 @@ private:
 #endif
 };
 
-//�Զ�����ջԪ��,ȷ����������ĸ�����
+//自动弹出栈元素,确保数量不变的辅助类
 class lua_stack_guard
 {
 public:

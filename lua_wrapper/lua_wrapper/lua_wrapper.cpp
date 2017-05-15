@@ -1,4 +1,4 @@
-#include "lua_wrapper.h"
+ï»¿#include "lua_wrapper.h"
 #include <string>
 
 SHARELIB_BEGIN_NAMESPACE
@@ -163,7 +163,7 @@ std::string lua_state_wrapper::get_error_msg()
 {
     if (!m_pLuaState)
 	{
-		return "Î´³É¹¦´´½¨lua_State";
+		return "æœªæˆåŠŸåˆ›å»ºlua_State";
 	}
 	size_t nLenth = 0;
 	const char *p = lua_tolstring(m_pLuaState, -1, &nLenth);

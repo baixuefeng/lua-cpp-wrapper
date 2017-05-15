@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
 #include <codecvt>
@@ -10,11 +10,11 @@
 SHARELIB_BEGIN_NAMESPACE
 
 //---------------------------------------------------
-/* tableÔªËØµÄkay
-1. ÓÃÓÚlua_ostreamÊ±, ÏÈ <<lua_table_key_t, ÔÙ <<tableÔªËØÖµµ½luaÕ»ÉÏ, ¸ÃÔªËØÖµµÄkey±ã±»Ö¸¶¨ÁË;
-   ²»Ö¸¶¨kayµÄÇé¿öÏÂ, °´Ë³ĞòÒÀ´Î´æÈë¡£½¨ÒéÖ¸¶¨keyÓë²»Ö¸¶¨keyµÄÁ½ÖÖ·½Ê½²»Òª»ìÓÃ£¬luaÄÚ²¿Òª½øĞĞhashÅÅĞò£¬
-   »ìÓÃÊ±´æÈëluaµÄË³Ğò²¢²»µÈÓÚÆäÄÚ²¿µÄÕæÊµË³Ğò£¬µ¼ÖÂ´ÓluaÖĞ¶ÁÈ¡Ê±Ë³ĞòÓë´æÈëµÄË³Ğò²»ÏàÍ¬¡£
-2. ÓÃÓÚlua_istreamÊ±, ÏÈ >>lua_table_key_t, ÔÙ >>±äÁ¿, ±ã¿ÉÒÔ°ÑÖ¸¶¨µÄtableÔªËØ¶ÁÈ¡±äÁ¿ÖĞ;
+/* tableå…ƒç´ çš„kay
+1. ç”¨äºlua_ostreamæ—¶, å…ˆ <<lua_table_key_t, å† <<tableå…ƒç´ å€¼åˆ°luaæ ˆä¸Š, è¯¥å…ƒç´ å€¼çš„keyä¾¿è¢«æŒ‡å®šäº†;
+   ä¸æŒ‡å®škayçš„æƒ…å†µä¸‹, æŒ‰é¡ºåºä¾æ¬¡å­˜å…¥ã€‚å»ºè®®æŒ‡å®škeyä¸ä¸æŒ‡å®škeyçš„ä¸¤ç§æ–¹å¼ä¸è¦æ··ç”¨ï¼Œluaå†…éƒ¨è¦è¿›è¡Œhashæ’åºï¼Œ
+   æ··ç”¨æ—¶å­˜å…¥luaçš„é¡ºåºå¹¶ä¸ç­‰äºå…¶å†…éƒ¨çš„çœŸå®é¡ºåºï¼Œå¯¼è‡´ä»luaä¸­è¯»å–æ—¶é¡ºåºä¸å­˜å…¥çš„é¡ºåºä¸ç›¸åŒã€‚
+2. ç”¨äºlua_istreamæ—¶, å…ˆ >>lua_table_key_t, å† >>å˜é‡, ä¾¿å¯ä»¥æŠŠæŒ‡å®šçš„tableå…ƒç´ è¯»å–å˜é‡ä¸­;
 */
 struct lua_table_key_t
 {
@@ -25,9 +25,9 @@ struct lua_table_key_t
     const char * m_pKey;
 };
 
-//----ÍùluaÕ»ÉÏpushÊı¾İ-----------------------------------
+//----å¾€luaæ ˆä¸Špushæ•°æ®-----------------------------------
 
-/* ÖØÔØµÄ << ÔËËã·ûÔ­ĞÍ:
+/* é‡è½½çš„ << è¿ç®—ç¬¦åŸå‹:
 lua_ostream & operator << (lua_ostream & os, const T & value);
 */
 class lua_ostream
@@ -38,7 +38,7 @@ public:
 
     lua_State * get() const;
 
-//----ÊıÖµÀàĞÍ--------------------------
+//----æ•°å€¼ç±»å‹--------------------------
     lua_ostream & operator << (bool value);
     lua_ostream & operator << (char value);
     lua_ostream & operator << (unsigned char value);
@@ -55,7 +55,7 @@ public:
     lua_ostream & operator << (double value);
     lua_ostream & operator << (long double value);
 
-//----char×Ö·û´®----------------------------
+//----charå­—ç¬¦ä¸²----------------------------
     lua_ostream & operator << (char * value);
     lua_ostream & operator << (const char * value);
     template<class T1, class T2>
@@ -64,7 +64,7 @@ public:
         return (*this) << (const char *)value.c_str();
     }
 
-//----wchar_t×Ö·û´®----------------------------
+//----wchar_tå­—ç¬¦ä¸²----------------------------
     lua_ostream & operator << (wchar_t * value);
     lua_ostream & operator << (const wchar_t * value);
     template<class T1, class T2>
@@ -95,7 +95,7 @@ public:
 #endif
     }
 
-//----Ö¸Õë----------------------------
+//----æŒ‡é’ˆ----------------------------
     template<class T>
     lua_ostream & operator << (T * value)
     {
@@ -110,28 +110,28 @@ public:
     struct table_end_t{};
     static const table_end_t table_end;
 
-    /*±ØĞëÅä¶ÔÊ¹ÓÃ, ±íÊ¾tableÊä³öµÄÆğÖ¹, ²»Ö§³ÖÇ¶Ì×.
-    Ò»¸öÅä¶ÔµÄtable²Ù×÷Ö®ºó, Õ»¶¥±ãÊÇÕâ¸öĞÂ¼ÓÈëµÄtable
+    /*å¿…é¡»é…å¯¹ä½¿ç”¨, è¡¨ç¤ºtableè¾“å‡ºçš„èµ·æ­¢, ä¸æ”¯æŒåµŒå¥—.
+    ä¸€ä¸ªé…å¯¹çš„tableæ“ä½œä¹‹å, æ ˆé¡¶ä¾¿æ˜¯è¿™ä¸ªæ–°åŠ å…¥çš„table
     */
     lua_ostream & operator << (table_begin_t);
     lua_ostream & operator << (table_end_t);
 
-    /* ÏÈÊä³ökeyµ½luaÖĞ, ÔÙ°ÑÖµÊä³öµ½luaÕ»ÉÏ, Õ»¶¥µÄµÄÖµ±ãÈ¡¸ÃÃû×Ö
+    /* å…ˆè¾“å‡ºkeyåˆ°luaä¸­, å†æŠŠå€¼è¾“å‡ºåˆ°luaæ ˆä¸Š, æ ˆé¡¶çš„çš„å€¼ä¾¿å–è¯¥åå­—
     */
     lua_ostream & operator << (lua_table_key_t key);
 
-    /** ÓÃÓÚ´æÈëÇ¶Ì×µÄtableÊ±¡£Íâ²ãlua_ostream << table_begin£»
-    ¶øºóÖØĞÂ¹¹ÔìÒ»¸ölua_ostream£¬´æÈëÍêÕûµÄÄÚ²ãtable£»
-    Ö®ºó°ÑÇ¶Ì×µÄ×Ótable²åÈëµ½Íâ²ãtableÖĞ¡£
-    @param[in] subTable ÀïÃæ´æÈëÁËÒ»¸öÍêÕûµÄÄÚ´ætable
+    /** ç”¨äºå­˜å…¥åµŒå¥—çš„tableæ—¶ã€‚å¤–å±‚lua_ostream << table_beginï¼›
+    è€Œåé‡æ–°æ„é€ ä¸€ä¸ªlua_ostreamï¼Œå­˜å…¥å®Œæ•´çš„å†…å±‚tableï¼›
+    ä¹‹åæŠŠåµŒå¥—çš„å­tableæ’å…¥åˆ°å¤–å±‚tableä¸­ã€‚
+    @param[in] subTable é‡Œé¢å­˜å…¥äº†ä¸€ä¸ªå®Œæ•´çš„å†…å­˜table
     */
     void insert_subtable(lua_ostream & subTable);
 
 private:
-    /* Ğ´ÈëÊı¾İÊµÏÖ£º
-    1. Ğ´ÈëÊı¾İµ½Õ»ÉÏ;
-    2. check_table_push, °ÑÕ»ÉÏµÄtableÔªËØÑ¹ÈëtableÖĞ;
-    3. µ±ÊäÈëlua_table_key_tÊ±, ×Ö·û´®ÈëÕ», ÏÂ´ÎÊäÈëÊı¾İÊ±, lua_rawset
+    /* å†™å…¥æ•°æ®å®ç°ï¼š
+    1. å†™å…¥æ•°æ®åˆ°æ ˆä¸Š;
+    2. check_table_push, æŠŠæ ˆä¸Šçš„tableå…ƒç´ å‹å…¥tableä¸­;
+    3. å½“è¾“å…¥lua_table_key_tæ—¶, å­—ç¬¦ä¸²å…¥æ ˆ, ä¸‹æ¬¡è¾“å…¥æ•°æ®æ—¶, lua_rawset
     */
     void check_table_push();
 
@@ -139,13 +139,13 @@ private:
     int m_tableIndex;
 };
 
-//----´ÓluaÖĞÖ¸¶¨µÄÕ»Î»ÖÃ¶ÁÈ¡Êı¾İ--------------------------
+//----ä»luaä¸­æŒ‡å®šçš„æ ˆä½ç½®è¯»å–æ•°æ®--------------------------
 
-/* ´ÓluaÖĞÖ¸¶¨µÄÕ»Î»ÖÃ¶ÁÈ¡Êı¾İ, Ò»¸ölua_istream¶ÔÏóÔÚeof()ÎªtrueÖ®Ç°
- ¿ÉÒÔ¶Á£¬Ö®ºó±ã²»ÄÜÔÙ¶Á£¬³ı·ÇÖØĞÂ¹¹ÔìÒ»¸ö¶ÔÏó¡£Èç¹ûÖ¸¶¨µÄÕ»Î»ÖÃÊÇtable£¬½«ÒÀ´Î
- ¶ÁÈ¡tableµÄ¸÷¸öÔªËØ£¬Ö±µ½eof()Îªtrue
+/* ä»luaä¸­æŒ‡å®šçš„æ ˆä½ç½®è¯»å–æ•°æ®, ä¸€ä¸ªlua_istreamå¯¹è±¡åœ¨eof()ä¸ºtrueä¹‹å‰
+ å¯ä»¥è¯»ï¼Œä¹‹åä¾¿ä¸èƒ½å†è¯»ï¼Œé™¤éé‡æ–°æ„é€ ä¸€ä¸ªå¯¹è±¡ã€‚å¦‚æœæŒ‡å®šçš„æ ˆä½ç½®æ˜¯tableï¼Œå°†ä¾æ¬¡
+ è¯»å–tableçš„å„ä¸ªå…ƒç´ ï¼Œç›´åˆ°eof()ä¸ºtrue
 
- ÖØÔØµÄ >> ÔËËã·ûÔ­ĞÍ:
+ é‡è½½çš„ >> è¿ç®—ç¬¦åŸå‹:
 lua_istream & operator >> (lua_istream & is, T & value); 
 */
 class lua_istream
@@ -157,17 +157,17 @@ public:
     lua_State * get() const;
     int index() const;
 
-    //Êı¾İÊÇ·ñÒÑ¶ÁÍê,Í¬Ò»¸ölua_istream¶ÔÏó,Ò»µ©¶Á¾Í²»ÄÜÔÙ¶Á,Èç¹ûÒªÖØ¸´¶Á,¿ÉÒÔÖØĞÂ¹¹ÔìÒ»¸ö
+    //æ•°æ®æ˜¯å¦å·²è¯»å®Œ,åŒä¸€ä¸ªlua_istreamå¯¹è±¡,ä¸€æ—¦è¯»å°±ä¸èƒ½å†è¯»,å¦‚æœè¦é‡å¤è¯»,å¯ä»¥é‡æ–°æ„é€ ä¸€ä¸ª
     bool eof() const;
 
-    //ÉÏ´Î¶ÁÈ¡ÊÇ·ñ³É¹¦, ²»»áÓ°ÏìÏÂ´ÎµÄ¶ÁÈ¡, ¼ÌĞø¶ÁÈ¡µÄ»°, ÉÏ´ÎÊ§°ÜÒ²»áÌø¹ı
+    //ä¸Šæ¬¡è¯»å–æ˜¯å¦æˆåŠŸ, ä¸ä¼šå½±å“ä¸‹æ¬¡çš„è¯»å–, ç»§ç»­è¯»å–çš„è¯, ä¸Šæ¬¡å¤±è´¥ä¹Ÿä¼šè·³è¿‡
     bool bad() const;
-    operator void*() const; //ÓÃÓÚboolÅĞ¶Ï
+    operator void*() const; //ç”¨äºboolåˆ¤æ–­
 
-    //Èç¹û¿ÉÒÔ¶ÁÈ¡µÄÖµÊÇ·ñÊÇÒ»¸öÇ¶Ì×µÄ×Ótable¡£Ê×ÏÈÒªÇó×ÔÉíÊÇÒ»¸ötable
+    //å¦‚æœå¯ä»¥è¯»å–çš„å€¼æ˜¯å¦æ˜¯ä¸€ä¸ªåµŒå¥—çš„å­tableã€‚é¦–å…ˆè¦æ±‚è‡ªèº«æ˜¯ä¸€ä¸ªtable
     bool isSubTable() const;
 
-//----ÊıÖµÀàĞÍ--------------------------
+//----æ•°å€¼ç±»å‹--------------------------
     lua_istream & operator >> (bool & value);
     lua_istream & operator >> (char & value);
     lua_istream & operator >> (unsigned char & value);
@@ -184,7 +184,7 @@ public:
     lua_istream & operator >> (double & value);
     lua_istream & operator >> (long double & value);
 
-//----char×Ö·û´®----------------------------
+//----charå­—ç¬¦ä¸²----------------------------
     template<class T1, class T2>
     lua_istream & operator >> (std::basic_string<char, T1, T2> & value)
     {
@@ -200,7 +200,7 @@ public:
         return *this;
     }
 
-//----wchar_t×Ö·û´®----------------------------
+//----wchar_tå­—ç¬¦ä¸²----------------------------
     template<class T1, class T2>
     lua_istream & operator >> (std::basic_string<wchar_t, T1, T2> & value)
     {
@@ -232,7 +232,7 @@ public:
         return *this;
     }
 
-//----Ö¸Õë----------------------------
+//----æŒ‡é’ˆ----------------------------
     template<class T>
     lua_istream & operator >> (T * & value)
     {
@@ -249,24 +249,24 @@ public:
     }
 
 //----table----------------------------
-    /* ÏÈ >>key, ¶øºó >>±äÁ¿, ¾Í±íÊ¾°ÑtableÖĞÖ¸¶¨Ãû×ÖµÄÖµ¶ÁÈ¡µ½±äÁ¿
+    /* å…ˆ >>key, è€Œå >>å˜é‡, å°±è¡¨ç¤ºæŠŠtableä¸­æŒ‡å®šåå­—çš„å€¼è¯»å–åˆ°å˜é‡
      */
     lua_istream & operator >> (lua_table_key_t key);
 
-    /* Èç¹ûÖµÊÇtable£¬¿ÉÒÔÒÀ´ÎÁ¬Ğø¶ÁÈ¡tableÔªËØµ½±äÁ¿¡£µ«²»Ö§³ÖtableÇ¶Ì×µÄÇé¿öÏÂÁ¬Ğø¶ÁÈ¡¡£
-    tableÇ¶Ì×Ê±£¬Ç°ÃæµÄ¶ÁÍêÖ®ºó£¬Õ»¶¥¾ÍÊÇ×Ótable£¬ÕâÊ±¹¹ÔìÒ»¸öĞÂµÄlua_istream(pLua, -1); 
-    ÓÃÕâ¸öĞÂµÄlua_istream¾Í¿ÉÒÔÁ¬Ğø¶ÁÈ¡×ÓtableÖĞµÄ±äÁ¿ÁË¡£
-    ¶ÁÈ¡Íê±Ï×Ótableºó£¬´«¸øÕâ¸öº¯Êı£¬½øĞĞÕ»ÇåÀí
+    /* å¦‚æœå€¼æ˜¯tableï¼Œå¯ä»¥ä¾æ¬¡è¿ç»­è¯»å–tableå…ƒç´ åˆ°å˜é‡ã€‚ä½†ä¸æ”¯æŒtableåµŒå¥—çš„æƒ…å†µä¸‹è¿ç»­è¯»å–ã€‚
+    tableåµŒå¥—æ—¶ï¼Œå‰é¢çš„è¯»å®Œä¹‹åï¼Œæ ˆé¡¶å°±æ˜¯å­tableï¼Œè¿™æ—¶æ„é€ ä¸€ä¸ªæ–°çš„lua_istream(pLua, -1); 
+    ç”¨è¿™ä¸ªæ–°çš„lua_istreamå°±å¯ä»¥è¿ç»­è¯»å–å­tableä¸­çš„å˜é‡äº†ã€‚
+    è¯»å–å®Œæ¯•å­tableåï¼Œä¼ ç»™è¿™ä¸ªå‡½æ•°ï¼Œè¿›è¡Œæ ˆæ¸…ç†
     */
     void cleanup_subtable(lua_istream & subTable);
 
 private:
-    /* ¶ÁÈ¡Êı¾İÊµÏÖ:
-    1. ÅĞ¶ÏÊÇ·ñµ½Í·
-    1. ¼ì²éÀàĞÍ
-    2. ´Óget_value_indexÈ¡³öºÏÊÊµÄË÷Òı, ×ª»»Êı¾İ;
-    3. Ìø×ªµ½ÏÂÒ»¸ö£¬Èç¹ûÊÇtable£¬ÉÏÒ»¸ö¼üÖµ¶Ô³öÕ»£¬ÏÂÒ»¸ö¼üÖµ¶ÔÈëÕ»; 
-    4. µ±ÊäÈëlua_table_key_tÊ±, lua_rawget£¬ÖµÈëÕ»£¬ÏÂ´ÎÓÅÏÈ¶ÁÈ¡£¬¶ÁÍê³öÕ»¡£
+    /* è¯»å–æ•°æ®å®ç°:
+    1. åˆ¤æ–­æ˜¯å¦åˆ°å¤´
+    1. æ£€æŸ¥ç±»å‹
+    2. ä»get_value_indexå–å‡ºåˆé€‚çš„ç´¢å¼•, è½¬æ¢æ•°æ®;
+    3. è·³è½¬åˆ°ä¸‹ä¸€ä¸ªï¼Œå¦‚æœæ˜¯tableï¼Œä¸Šä¸€ä¸ªé”®å€¼å¯¹å‡ºæ ˆï¼Œä¸‹ä¸€ä¸ªé”®å€¼å¯¹å…¥æ ˆ; 
+    4. å½“è¾“å…¥lua_table_key_tæ—¶, lua_rawgetï¼Œå€¼å…¥æ ˆï¼Œä¸‹æ¬¡ä¼˜å…ˆè¯»å–ï¼Œè¯»å®Œå‡ºæ ˆã€‚
     */
     int get_value_index();
     void next();
@@ -279,23 +279,23 @@ private:
     bool m_isTableKey;
 };
 
-//----luaµ÷ÓÃC++º¯ÊıÊ±, ´«²Î¼°·µ»ØÖµµÄ×ª½ÓÀà------------------------------------------------------
+//----luaè°ƒç”¨C++å‡½æ•°æ—¶, ä¼ å‚åŠè¿”å›å€¼çš„è½¬æ¥ç±»------------------------------------------------------
 
-/* luaµ÷ÓÃC++Ê±, ´«²Î¼°·µ»ØÖµµÄ×ª½ÓÀà
-1. µ÷ÓÃC++º¯ÊıÊ±µÄ´«²Î: µ÷ÓÃfrom_lua´ÓluaÖĞ¶ÁÈ¡Êı¾İ´«²Î, from_lua ×ª½Óµ½ lua_istream , ÓÃËüÊµÏÖ¶ÁÈ¡Êı¾İ
-2. µ÷ÓÃC++º¯ÊıÊ±µÄ·µ»ØÖµ: µ÷ÓÃto_lua°ÑÊı¾İĞ´Èëµ½luaÖĞ, to_lua ×ª½Óµ½ lua_ostream , ÓÃËüÊµÏÖÊı¾İÊä³ö
-3. Ö§³Ö×Ô¶¨ÒåÀàĞÍµÄ×ö·¨(×Ô¶¨ÒåÀàĞÍÒªÓĞÄ¬ÈÏ¹¹Ôìº¯Êı, ¿ÉÒÔ¸´ÖÆ»òÒÆ¶¯)£º
-    ÓÃÓÚ²ÎÊıµÄ×Ô¶¨ÒåÀàĞÍ, ±ØĞëÖØÔØ lua_istream µÄ >> ÔËËã·û;
-    ÓÃÓÚ·µ»ØÖµµÄ×Ô¶¨ÒåÀàĞÍ, ±ØĞëÖØÔØ lua_ostream µÄ << ÔËËã·û;
+/* luaè°ƒç”¨C++æ—¶, ä¼ å‚åŠè¿”å›å€¼çš„è½¬æ¥ç±»
+1. è°ƒç”¨C++å‡½æ•°æ—¶çš„ä¼ å‚: è°ƒç”¨from_luaä»luaä¸­è¯»å–æ•°æ®ä¼ å‚, from_lua è½¬æ¥åˆ° lua_istream , ç”¨å®ƒå®ç°è¯»å–æ•°æ®
+2. è°ƒç”¨C++å‡½æ•°æ—¶çš„è¿”å›å€¼: è°ƒç”¨to_luaæŠŠæ•°æ®å†™å…¥åˆ°luaä¸­, to_lua è½¬æ¥åˆ° lua_ostream , ç”¨å®ƒå®ç°æ•°æ®è¾“å‡º
+3. æ”¯æŒè‡ªå®šä¹‰ç±»å‹çš„åšæ³•(è‡ªå®šä¹‰ç±»å‹è¦æœ‰é»˜è®¤æ„é€ å‡½æ•°, å¯ä»¥å¤åˆ¶æˆ–ç§»åŠ¨)ï¼š
+    ç”¨äºå‚æ•°çš„è‡ªå®šä¹‰ç±»å‹, å¿…é¡»é‡è½½ lua_istream çš„ >> è¿ç®—ç¬¦;
+    ç”¨äºè¿”å›å€¼çš„è‡ªå®šä¹‰ç±»å‹, å¿…é¡»é‡è½½ lua_ostream çš„ << è¿ç®—ç¬¦;
 */
 template<class T, 
     bool isEnum = std::is_enum<std::decay_t<T>>::value>
 struct lua_io_dispatcher
 {
-    /** Êı¾İpushµ½luaÕ»ÉÏ
+    /** æ•°æ®pushåˆ°luaæ ˆä¸Š
     @param[in] pL 
-    @param[in] value Êı¾İ
-    @return luaÕ»ÉÏÔö¼ÓµÄ¸öÊı
+    @param[in] value æ•°æ®
+    @return luaæ ˆä¸Šå¢åŠ çš„ä¸ªæ•°
     */
     static int to_lua(lua_State * pL, const T & value)
     {
@@ -306,10 +306,10 @@ struct lua_io_dispatcher
         return lua_gettop(pL) - n;
     }
 
-    /** ´ÓluaÕ»ÉÏ¶ÁÈ¡Êı¾İ
+    /** ä»luaæ ˆä¸Šè¯»å–æ•°æ®
     @param[in] pL 
-    @param[in] index luaÕ»ÉÏµÄË÷ÒıÎ»ÖÃ
-    @return ×ª»»ºóµÄC++Êı¾İ
+    @param[in] index luaæ ˆä¸Šçš„ç´¢å¼•ä½ç½®
+    @return è½¬æ¢åçš„C++æ•°æ®
     */
     static T from_lua(lua_State * pL, int index, T defaultValue = T{})
     {
@@ -372,11 +372,11 @@ struct lua_io_dispatcher<char*, false>
 
 namespace Internal
 {
-    /* ÎªÁË½â¾öwchar_t* ÀàĞÍµÄÄ£°åÌØ»¯.
-    Èç¹ûÏñÆäËüÀàĞÍÒ»Ñù·µ»Øconst wchar_t*µÄ»°, º¯ÊıÄÚ²¿µÄÁÙÊ±±äÁ¿Ïú»ÙÖ®ºó£¬·µ»ØµÄÖ¸Õë¾Í³ÉÁËÒ°Ö¸Õë¡£
-    const char* ²»´æÔÚÕâ¸öÎÊÌâ£¬ÒòÎªÖ¸ÕëËùÖ¸µÄÄÚÈİÔÚluaÄÚ²¿±£´æ×Å£¬Ã»ÓĞ±»Ïú»Ù¡£
-    Òò´ËÔÚĞèÒª·µ»Øconst wchar_t*µÄµØ·½£¬¸ÄÎª·µ»ØStdWstringWrapper£¬¶øËü¿ÉÒÔÒşÊ½×ª»¯Îªconst wchar_t*£¬
-    ÕâÑùÄÚ²¿µÄÁÙÊ±±äÁ¿¾­StdWstringWrapper×ª½ÓÖ®ºó£¬ÉúÃüÆÚÑÓ³¤£¬±ÜÃâÁËÒ°Ö¸ÕëµÄÇé¿ö
+    /* ä¸ºäº†è§£å†³wchar_t* ç±»å‹çš„æ¨¡æ¿ç‰¹åŒ–.
+    å¦‚æœåƒå…¶å®ƒç±»å‹ä¸€æ ·è¿”å›const wchar_t*çš„è¯, å‡½æ•°å†…éƒ¨çš„ä¸´æ—¶å˜é‡é”€æ¯ä¹‹åï¼Œè¿”å›çš„æŒ‡é’ˆå°±æˆäº†é‡æŒ‡é’ˆã€‚
+    const char* ä¸å­˜åœ¨è¿™ä¸ªé—®é¢˜ï¼Œå› ä¸ºæŒ‡é’ˆæ‰€æŒ‡çš„å†…å®¹åœ¨luaå†…éƒ¨ä¿å­˜ç€ï¼Œæ²¡æœ‰è¢«é”€æ¯ã€‚
+    å› æ­¤åœ¨éœ€è¦è¿”å›const wchar_t*çš„åœ°æ–¹ï¼Œæ”¹ä¸ºè¿”å›StdWstringWrapperï¼Œè€Œå®ƒå¯ä»¥éšå¼è½¬åŒ–ä¸ºconst wchar_t*ï¼Œ
+    è¿™æ ·å†…éƒ¨çš„ä¸´æ—¶å˜é‡ç»StdWstringWrapperè½¬æ¥ä¹‹åï¼Œç”Ÿå‘½æœŸå»¶é•¿ï¼Œé¿å…äº†é‡æŒ‡é’ˆçš„æƒ…å†µ
     */
     struct StdWstringWrapper
     {

@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 #include <tuple>
 #include "MacroDefBase.h"
 
 SHARELIB_BEGIN_NAMESPACE
 
-//----°ÑÖ¸Õë»òÒıÓÃÍ³Ò»×ª»¯ÎªÒıÓÃ-------------------------------------------------------------------------------
+//----æŠŠæŒ‡é’ˆæˆ–å¼•ç”¨ç»Ÿä¸€è½¬åŒ–ä¸ºå¼•ç”¨-------------------------------------------------------------------------------
 namespace Internal
 {
     template<class T, bool isPointer, bool isLValue>
@@ -44,14 +44,14 @@ namespace Internal
     };
 }
 
-//°ÑÖ¸Õë»òÒıÓÃÍ³Ò»×ª»¯ÎªÒıÓÃ
+//æŠŠæŒ‡é’ˆæˆ–å¼•ç”¨ç»Ÿä¸€è½¬åŒ–ä¸ºå¼•ç”¨
 template<class T>
 typename Internal::ToReferenceImpl<T>::type to_reference(T && arg)
 {
     return Internal::ToReferenceImpl<T>::ToReference(std::forward<T>(arg));
 }
 
-//----¸ù¾İ¿É±ä²ÎÊıÉú³É²ÎÊıĞòÁĞ-----------------------------------------------------------------------
+//----æ ¹æ®å¯å˜å‚æ•°ç”Ÿæˆå‚æ•°åºåˆ—-----------------------------------------------------------------------
 
 template<size_t ... Index>
 struct ArgIndex
@@ -71,14 +71,14 @@ namespace Internal
     {};
 }
 
-//¸ù¾İ¿É±ä²ÎÊıÉú³É²ÎÊıĞòÁĞ,´Ó0¿ªÊ¼
+//æ ¹æ®å¯å˜å‚æ•°ç”Ÿæˆå‚æ•°åºåˆ—,ä»0å¼€å§‹
 template<class ... T>
 struct MakeArgIndex
 {
     using type = typename Internal::MakeArgIndexHelper<ArgIndex<>, T... >::type;
 };
 
-//¸ù¾İtupleÉú³É²ÎÊıĞòÁĞ,´Ó0¿ªÊ¼
+//æ ¹æ®tupleç”Ÿæˆå‚æ•°åºåˆ—,ä»0å¼€å§‹
 template<class T>
 struct MakeTupleIndex;
 
@@ -88,7 +88,7 @@ struct MakeTupleIndex<std::tuple<T...> >
     using type = typename Internal::MakeArgIndexHelper<ArgIndex<>, T... >::type;
 };
 
-//----ÅĞ¶ÏÀàÊÇ·ñÓĞ³ÉÔ±ÀàĞÍ------------------------------------------------------------------------
+//----åˆ¤æ–­ç±»æ˜¯å¦æœ‰æˆå‘˜ç±»å‹------------------------------------------------------------------------
 
 namespace Internal
 {
@@ -109,20 +109,20 @@ namespace Internal
     };
 }
 
-/* ÅĞ¶ÏÀàÊÇ·ñÓĞ³ÉÔ±
-Ê¹ÓÃ·½·¨: ¶¨ÒåÏÂÃæµÄÀà
+/* åˆ¤æ–­ç±»æ˜¯å¦æœ‰æˆå‘˜
+ä½¿ç”¨æ–¹æ³•: å®šä¹‰ä¸‹é¢çš„ç±»
 
 template<class _ClassType>
 struct HasMember...
 HAS_MEMBER_TYPE_IMPL(membername)
 
-Ö®ºó¾Í¿ÉÓÃ HasMember...<className>::value À´ÅĞ¶ÏÒ»¸öÀàÊÇ·ñÓĞÄ³³ÉÔ±
-ÊµÏÖÏ¸½Ú: Á½¸ö¾²Ì¬º¯Êı±ØĞëÓÃÄ£°å
-1. ÖØÔØµÄº¯Êı,ËùÓĞÖØÔØ°æ±¾¶¼»á±àÒë³É¶ş½øÖÆ´úÂë,Óöµ½·Ç·¨µÄ¾Í±àÒë²»¹ı;
-2. Ä£°åÊÇÑ¡ÔñĞÔ±àÒë,²»ÊÇÖØÔØ,Ö»»áÑ¡ÔñÒ»¸öºÏ·¨µÄ°æ±¾±àÒë³É¶ş½øÖÆ´úÂë,·Ç·¨µÄ°æ±¾¾Í²»»á±àÒë,Ò²¾Í²»»áµ¼ÖÂ±àÒë²»¹ı;
+ä¹‹åå°±å¯ç”¨ HasMember...<className>::value æ¥åˆ¤æ–­ä¸€ä¸ªç±»æ˜¯å¦æœ‰æŸæˆå‘˜
+å®ç°ç»†èŠ‚: ä¸¤ä¸ªé™æ€å‡½æ•°å¿…é¡»ç”¨æ¨¡æ¿
+1. é‡è½½çš„å‡½æ•°,æ‰€æœ‰é‡è½½ç‰ˆæœ¬éƒ½ä¼šç¼–è¯‘æˆäºŒè¿›åˆ¶ä»£ç ,é‡åˆ°éæ³•çš„å°±ç¼–è¯‘ä¸è¿‡;
+2. æ¨¡æ¿æ˜¯é€‰æ‹©æ€§ç¼–è¯‘,ä¸æ˜¯é‡è½½,åªä¼šé€‰æ‹©ä¸€ä¸ªåˆæ³•çš„ç‰ˆæœ¬ç¼–è¯‘æˆäºŒè¿›åˆ¶ä»£ç ,éæ³•çš„ç‰ˆæœ¬å°±ä¸ä¼šç¼–è¯‘,ä¹Ÿå°±ä¸ä¼šå¯¼è‡´ç¼–è¯‘ä¸è¿‡;
 */
 
-//ÊÇ·ñÓĞ³ÉÔ±(º¯Êı,¾²Ì¬±äÁ¿), ÓĞbug, µ±ÀàÊÇÄ£°åÊ±×ÜÊÇtrue,ÆÁ±Î
+//æ˜¯å¦æœ‰æˆå‘˜(å‡½æ•°,é™æ€å˜é‡), æœ‰bug, å½“ç±»æ˜¯æ¨¡æ¿æ—¶æ€»æ˜¯true,å±è”½
 //#define HAS_MEMBER_IMPL(memberName) \
 //{ \
 //private: \
@@ -132,7 +132,7 @@ HAS_MEMBER_TYPE_IMPL(membername)
 //    static const bool value = decltype(DeclFunc<_ClassType>(0))::value; \
 //};
 
-//ÊÇ·ñÓĞ³ÉÔ±(ÀàĞÍ)
+//æ˜¯å¦æœ‰æˆå‘˜(ç±»å‹)
 #define HAS_MEMBER_TYPE_IMPL(memberType) \
 { \
 private: \
@@ -142,11 +142,11 @@ public: \
     static const bool value = decltype(DeclFunc<_ClassType>(0))::value; \
 };
 
-//----º¯ÊıÀàĞÍ¸¨Öú----------------------------------------------------------------------------
+//----å‡½æ•°ç±»å‹è¾…åŠ©----------------------------------------------------------------------------
 
 namespace Internal
 {
-// ÏÂÃæµÄºêÓÃÀ´¶¨Òåº¯Êıµ÷ÓÃÀàĞÍ, ÊÇ´ÓSTLÔ´ÂëÖĞ¸´ÖÆÏÂÀ´µÄ
+// ä¸‹é¢çš„å®ç”¨æ¥å®šä¹‰å‡½æ•°è°ƒç”¨ç±»å‹, æ˜¯ä»STLæºç ä¸­å¤åˆ¶ä¸‹æ¥çš„
 
 #ifdef _M_IX86
 
@@ -208,10 +208,10 @@ namespace Internal
 #endif /* _M_IX86 */
 
 
-//ÏÂÃæ¶¨ÒåµÄºê, ÓÃÀ´Éú³ÉÄ£°åÌØ»¯
+//ä¸‹é¢å®šä¹‰çš„å®, ç”¨æ¥ç”Ÿæˆæ¨¡æ¿ç‰¹åŒ–
 
-/* Ö¸Õë±äÁ¿±¾ÉíµÄconst,volatileÊôĞÔ²¢²»ĞèÒª×¨ÃÅÌØ»¯,Ö»Òª¶Ô±äÁ¿Ó¦ÓÃ std::remove_cv_t ¼´¿É.
-   Èç¹û¶ÔËüÃÇ×¨ÃÅÌØ»¯, Éú³ÉµÄÌØ»¯°æ±¾¾ÍÌ«¶àÁË, ÁíÍâÒ²»á¶îÍâÒıÈëÒ»Ğ©ºêÃû×Ö
+/* æŒ‡é’ˆå˜é‡æœ¬èº«çš„const,volatileå±æ€§å¹¶ä¸éœ€è¦ä¸“é—¨ç‰¹åŒ–,åªè¦å¯¹å˜é‡åº”ç”¨ std::remove_cv_t å³å¯.
+   å¦‚æœå¯¹å®ƒä»¬ä¸“é—¨ç‰¹åŒ–, ç”Ÿæˆçš„ç‰¹åŒ–ç‰ˆæœ¬å°±å¤ªå¤šäº†, å¦å¤–ä¹Ÿä¼šé¢å¤–å¼•å…¥ä¸€äº›å®åå­—
 */
 
 #ifndef CALLABLE_MEMBER_CALL_CV
@@ -224,7 +224,7 @@ namespace Internal
 
 }
 
-//ÀàĞÍÖµ
+//ç±»å‹å€¼
 enum class CallableIdType
 {
     FUNCTION,
@@ -233,18 +233,18 @@ enum class CallableIdType
     POINTER_TO_MEMBER_DATA,
 };
 
-/* µ÷ÓÃÀàĞÍ¸¨Öú
-¸²¸ÇÁËº¯Êı,º¯ÊıÖ¸Õë,³ÉÔ±º¯ÊıÖ¸Õë,³ÉÔ±Ö¸Õë,º¯Êı¶ÔÏóÃ»ÓĞ¸²¸Ç£¬¶¨ÒåÁËÒÔÏÂ¼¸ÖÖÀàĞÍ±ğÃû£º
-result_t, ·µ»ØÖµÀàĞÍ£»
-arg_tuple_t, ²ÎÊı°ó¶¨³ÉtupleµÄÀàĞÍ;
-arg_index_t, ²ÎÊıµÄĞòÁĞºÅÀàĞÍ, ArgIndex<...>
-class_t, (Ö»ÓĞ³ÉÔ±º¯ÊıÖ¸ÕëºÍ³ÉÔ±Ö¸Õë²Å¶¨Òå), ÀàÀàĞÍ
-callable_id, Öµ,CallableIdTypeÖĞ¶¨ÒåµÄÀàĞÍÖµ
+/* è°ƒç”¨ç±»å‹è¾…åŠ©
+è¦†ç›–äº†å‡½æ•°,å‡½æ•°æŒ‡é’ˆ,æˆå‘˜å‡½æ•°æŒ‡é’ˆ,æˆå‘˜æŒ‡é’ˆ,å‡½æ•°å¯¹è±¡æ²¡æœ‰è¦†ç›–ï¼Œå®šä¹‰äº†ä»¥ä¸‹å‡ ç§ç±»å‹åˆ«åï¼š
+result_t, è¿”å›å€¼ç±»å‹ï¼›
+arg_tuple_t, å‚æ•°ç»‘å®šæˆtupleçš„ç±»å‹;
+arg_index_t, å‚æ•°çš„åºåˆ—å·ç±»å‹, ArgIndex<...>
+class_t, (åªæœ‰æˆå‘˜å‡½æ•°æŒ‡é’ˆå’Œæˆå‘˜æŒ‡é’ˆæ‰å®šä¹‰), ç±»ç±»å‹
+callable_id, å€¼,CallableIdTypeä¸­å®šä¹‰çš„ç±»å‹å€¼
  */
 template<class T>
 struct CallableTypeHelper;
 
-//º¯ÊıÀàĞÍÌØ»¯
+//å‡½æ•°ç±»å‹ç‰¹åŒ–
 #define FUNCTION_HELPER(CALL_OPT, NO_USE) \
 template<class _RetType, class... _ArgType> \
 struct CallableTypeHelper<_RetType CALL_OPT (_ArgType...)> \
@@ -257,7 +257,7 @@ struct CallableTypeHelper<_RetType CALL_OPT (_ArgType...)> \
 NON_MEMBER_CALL_MACRO(FUNCTION_HELPER, )
 #undef FUNCTION_HELPER
 
-//º¯ÊıÖ¸ÕëÀàĞÍÌØ»¯
+//å‡½æ•°æŒ‡é’ˆç±»å‹ç‰¹åŒ–
 #define POINTER_TO_FUNCTION_HELPER(CALL_OPT, NO_USE) \
 template<class _RetType, class... _ArgType> \
 struct CallableTypeHelper<_RetType(CALL_OPT * )(_ArgType...)> \
@@ -270,7 +270,7 @@ struct CallableTypeHelper<_RetType(CALL_OPT * )(_ArgType...)> \
 NON_MEMBER_CALL_MACRO(POINTER_TO_FUNCTION_HELPER, )
 #undef POINTER_TO_FUNCTION_HELPER
 
-//³ÉÔ±º¯ÊıÖ¸ÕëÀàĞÍÌØ»¯
+//æˆå‘˜å‡½æ•°æŒ‡é’ˆç±»å‹ç‰¹åŒ–
 #define POINTER_TO_MEMBER_FUNCTION_HELPER(CALL_OPT, NO_USE, CV_OPT) \
 template<class _RetType, class _ClassType, class... _ArgType> \
 struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT> \
@@ -284,7 +284,7 @@ struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT>
 CALLABLE_MEMBER_CALL_CV(POINTER_TO_MEMBER_FUNCTION_HELPER, )
 #undef POINTER_TO_MEMBER_FUNCTION_HELPER
 
-//³ÉÔ±Ö¸ÕëÀàĞÍÌØ»¯
+//æˆå‘˜æŒ‡é’ˆç±»å‹ç‰¹åŒ–
 template<class _RetType, class _ClassType>
 struct CallableTypeHelper<_RetType _ClassType::* >
 {
