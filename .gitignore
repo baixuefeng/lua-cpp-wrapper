@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+/Debug
+/lua_wrapper/Debug
+/*.opensdf
+/*.sdf
+/*.suo
+/Release
+/lua_wrapper/Release

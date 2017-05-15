@@ -8,7 +8,7 @@ version: 0.1
 #include <initializer_list>
 #include "MacroDefBase.h"
 #include "lua_iostream.h"
-#include "TemplateMeta/MetaUtility.h"
+#include "MetaUtility.h"
 
 SHARELIB_BEGIN_NAMESPACE
 

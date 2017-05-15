@@ -71,8 +71,15 @@ public:
     lua_ostream & operator << (const std::basic_string<wchar_t, T1, T2> & value)
     {
 #ifdef LUA_CODE_UTF8
-        std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
-        return (*this) << cvt.to_bytes(value).c_str();
+        try
+        {
+            std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
+            return (*this) << cvt.to_bytes(value).c_str();
+        }
+        catch (...)
+        {
+            return *this;
+        }
 #else
 #ifdef _MSC_VER
 #pragma warning(disable:4996)
@@ -201,8 +208,15 @@ public:
         if ((*this) >> temp)
         {
 #ifdef LUA_CODE_UTF8
-            std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
-            value = cvt.from_bytes(temp);
+            try
+            {
+                std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
+                value = cvt.from_bytes(temp);
+            }
+            catch (...)
+            {
+                value.clear();
+            }
 #else
 #ifdef _MSC_VER
 #pragma warning(disable:4996)

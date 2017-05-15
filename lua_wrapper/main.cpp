@@ -11,20 +11,7 @@
 
 shr::lua_istream & operator >> (shr::lua_istream & is, RECT & rc)
 {
-    is >> rc.left >> rc.top/* >> rc.right >> rc.bottom*/;
-    if (is.isSubTable())
-    {
-        shr::lua_istream subTable(is.get(), -1);
-        double temp;
-        subTable >> temp >> temp >> temp >> temp;
-        is.cleanup_subtable(subTable);
-    }
-    else
-    {
-        is >> rc.right;
-    }
-    is >> rc.bottom;
-
+    is >> rc.left >> rc.top >> rc.right >> rc.bottom;
     return is;
 }
 
