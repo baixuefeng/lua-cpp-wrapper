@@ -149,15 +149,15 @@ public:
     lua_State * get() const;
     int index() const;
 
-    //数据是否已读完,同一个lua_istream对象,一旦读就不能再读,如果要重复读,可以重新构造一个
+    //数据是否已读完,同一个lua_istream对象,一旦读完就不能再读,如果要重复读,可以重新构造一个
     bool eof() const;
 
-    //上次读取是否成功, 不会影响下次的读取, 继续读取的话, 上次失败也会跳过
+    //上次读取是否成功, 不会影响下次的读取, 继续读取的话, 上次失败的也会跳过
     bool bad() const;
     operator void*() const; //用于bool判断
 
-    //如果可以读取的值是否是一个嵌套的子table。首先要求自身是一个table
-    bool isSubTable() const;
+    //栈顶的值是否是一个嵌套的子table。首先要求自身是一个table
+    bool is_subtable() const;
 
 //----数值类型--------------------------
     lua_istream & operator >> (bool & value);
@@ -240,7 +240,7 @@ public:
     lua_istream & operator >> (lua_table_key_t key);
 
     /* 如果值是table，可以依次连续读取table元素到变量。但不支持table嵌套的情况下连续读取。
-    table嵌套时，前面的读完之后，栈顶就是子table，这时构造一个新的lua_istream(pLua, -1); 
+    table嵌套时，前面的读完之后，栈顶就是子table(is_subtable为true)，这时构造一个新的lua_istream(pLua, -1); 
     用这个新的lua_istream就可以连续读取子table中的变量了。
     读取完毕子table后，传给这个函数，进行栈清理
     */

@@ -203,7 +203,7 @@ lua_istream::operator void*() const
     return (void*)m_isOK;
 }
 
-bool lua_istream::isSubTable() const
+bool lua_istream::is_subtable() const
 {
     assert(lua_type(m_pLua, m_stackIndex) == LUA_TTABLE);
     if (lua_type(m_pLua, m_stackIndex) != LUA_TTABLE)
