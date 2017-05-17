@@ -17,7 +17,7 @@ shr::lua_istream & operator >> (shr::lua_istream & is, RECT & rc)
 
 static void TestFunc1(int a, double b, bool c, const std::wstring & d, const RECT & e)
 {
-    std::wcout.imbue(std::locale("CHS"));
+    std::wcout.imbue(std::locale(""));
     std::wcout << a << L" "
         << b << L" "
         << std::boolalpha << c << L" "

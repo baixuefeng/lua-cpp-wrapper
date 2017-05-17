@@ -3,7 +3,7 @@
 #include "lua/src/lua.hpp"
 #include "MacroDefBase.h"
 
-//lua脚本使用的编码, 如果使用utf8, 定义该宏. 未定义时默认为ASCII编码
+//lua脚本使用的编码, 如果使用utf8, 定义该宏. 未定义时默认为当前locale使用的编码
 //#define LUA_CODE_UTF8
 
 SHARELIB_BEGIN_NAMESPACE

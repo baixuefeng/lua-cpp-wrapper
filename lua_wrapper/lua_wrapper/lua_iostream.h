@@ -70,29 +70,22 @@ public:
     template<class T1, class T2>
     lua_ostream & operator << (const std::basic_string<wchar_t, T1, T2> & value)
     {
-#ifdef LUA_CODE_UTF8
         try
         {
+#ifdef LUA_CODE_UTF8
             std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
+#else
+            std::locale loc("");
+            auto & fct = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(loc);
+            std::wstring_convert<std::decay_t<decltype(fct)> > cvt(&fct);
+#endif
             return (*this) << cvt.to_bytes(value).c_str();
         }
         catch (...)
         {
+            assert(!"code convert failed!");
             return *this;
         }
-#else
-#ifdef _MSC_VER
-#pragma warning(disable:4996)
-#endif
-        std::string temp;
-        temp.assign(value.size() * sizeof(wchar_t), '\0');
-        size_t offset = std::wcstombs(&temp[0], value.c_str(), temp.size());
-        temp.erase(offset);
-        return (*this) << temp.c_str();
-#ifdef _MSC_VER
-#pragma warning(default:4996)
-#endif
-#endif
     }
 
 //----指针----------------------------
@@ -207,27 +200,22 @@ public:
         std::string temp;
         if ((*this) >> temp)
         {
-#ifdef LUA_CODE_UTF8
             try
             {
+#ifdef LUA_CODE_UTF8
                 std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
+#else
+                std::locale loc("");
+                auto & fct = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(loc);
+                std::wstring_convert<std::decay_t<decltype(fct)> > cvt(&fct);
+#endif
                 value = cvt.from_bytes(temp);
             }
             catch (...)
             {
+                assert(!"code convert failed!");
                 value.clear();
             }
-#else
-#ifdef _MSC_VER
-#pragma warning(disable:4996)
-#endif
-            value.assign(temp.size(), '\0');
-            size_t offset = std::mbstowcs(&value[0], temp.c_str(), value.size());
-            value.erase(offset);
-#ifdef _MSC_VER
-#pragma warning(default:4996)
-#endif
-#endif
         }
         return *this;
     }
