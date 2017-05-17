@@ -17,13 +17,14 @@ shr::lua_istream & operator >> (shr::lua_istream & is, RECT & rc)
 
 static void TestFunc1(int a, double b, bool c, const std::wstring & d, const RECT & e)
 {
-    std::wcout.imbue(std::locale(""));
+    auto pre = std::wcout.imbue(std::locale{ "" });
     std::wcout << a << L" "
         << b << L" "
         << std::boolalpha << c << L" "
         << d << L" "
         << L"{ " << e.left << ", " << e.top << ", " << e.right << ", " << e.bottom << L" }"
         << std::endl;
+    std::wcout.imbue(pre);
 }
 
 struct WrapCompoment
@@ -114,6 +115,7 @@ void TestLuaCpp()
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+    std::locale::global(std::locale{ "" });
     TestLuaCpp();
 	return 0;
 }
