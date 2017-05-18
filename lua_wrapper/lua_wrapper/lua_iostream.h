@@ -313,6 +313,7 @@ struct lua_io_dispatcher
     }
 };
 
+//枚举类型特化
 template<class T>
 struct lua_io_dispatcher<T, true>
 {
@@ -329,6 +330,7 @@ struct lua_io_dispatcher<T, true>
     }
 };
 
+//const char*类型特化
 template<>
 struct lua_io_dispatcher<const char*, false>
 {
@@ -350,6 +352,7 @@ struct lua_io_dispatcher<const char*, false>
     }
 };
 
+//char*类型特化
 template<>
 struct lua_io_dispatcher<char*, false>
     : public lua_io_dispatcher<const char*, false>
@@ -385,6 +388,7 @@ namespace Internal
     };
 }
 
+//const wchar_t*类型特化
 template<>
 struct lua_io_dispatcher<const wchar_t*, false>
 {
@@ -411,6 +415,7 @@ struct lua_io_dispatcher<const wchar_t*, false>
     }
 };
 
+//wchar_t*类型特化
 template<>
 struct lua_io_dispatcher<wchar_t*, false>
     : public lua_io_dispatcher<const wchar_t*, false>

@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
-
+//重载从lua中读取RECT数据
 shr::lua_istream & operator >> (shr::lua_istream & is, RECT & rc)
 {
     is >> rc.left >> rc.top >> rc.right >> rc.bottom;
@@ -33,6 +33,8 @@ struct WrapCompoment
     RECT m_b;
     double m_c;
 };
+
+//重载把WrapCompoment写入lua的输出运算符
 static shr::lua_ostream & operator << (shr::lua_ostream & os, const WrapCompoment& compoment)
 {
     os << shr::lua_ostream::table_begin
@@ -49,6 +51,7 @@ static shr::lua_ostream & operator << (shr::lua_ostream & os, const WrapCompomen
     return os;
 }
 
+//重载从lua中读取WrapCompoment的输入运算符
 static shr::lua_istream & operator >> (shr::lua_istream & is, WrapCompoment& compoment)
 {
     is >> compoment.m_a;
@@ -92,7 +95,6 @@ ENTRY_LUA_CPP_MAP_IMPLEMENT("MemberStr", &LuaTestClass::m_str)
 ENTRY_LUA_CPP_MAP_IMPLEMENT("MemberCompoment", &LuaTestClass::m_wrapCompoment)
 ENTRY_LUA_CPP_MAP_IMPLEMENT("MessageBox", &::MessageBox)
 END_LUA_CPP_MAP_IMPLEMENT()
-
 
 void TestLuaCpp()
 {
