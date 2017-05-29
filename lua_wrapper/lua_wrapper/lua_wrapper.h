@@ -6,6 +6,7 @@ version: 0.2
 
 #include <cstdint>
 #include <initializer_list>
+#include <memory>
 #include "MacroDefBase.h"
 #include "lua_iostream.h"
 #include "MetaUtility.h"
@@ -155,46 +156,135 @@ namespace Internal
         }
     };
 
+    //模板特化, 函数对象, 返回void
+    template<class _CallableType, size_t ... index>
+    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, true, _CallableType, ArgIndex<index...> >
+    {
+        template<class _PfType>
+        static int Apply(lua_State * pLua, _PfType && pObj)
+        {
+            pObj(lua_io_dispatcher<
+                std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
+            >::from_lua(pLua, index + 1)...);
+            return 0;
+        }
+    };
+
+    //模板特化, 函数对象, 有返回值
+    template<class _CallableType, size_t ... index>
+    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, false, _CallableType, ArgIndex<index...> >
+    {
+        template<class _PfType>
+        static int Apply(lua_State * pLua, _PfType && pObj)
+        {
+            using result_type = std::decay_t<typename _CallableType::result_t>;
+            return lua_io_dispatcher<result_type>::to_lua(
+                pLua,
+                pObj(lua_io_dispatcher<
+                    std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type>
+                >::from_lua(pLua, index + 1)...)
+                );
+        }
+    };
+
 //----lua C函数的适配函数入口----------------------------------------
 
     //lua调用C的主函数,所有的C++调用都从这里转发出去
-    template<class _FuncType>
+    template<class _CallType>
     int MainLuaCFunctionCall(lua_State * pLua)
     {
-        //upvalue中第一个值固定为真实执行的调用指针
+        //upvalue中第一个值固定为真实执行的调用值
         void * ppf = lua_touserdata(pLua, lua_upvalueindex(1));
         assert(ppf);
-        assert(*(_FuncType*)ppf);
-        if (ppf)
+        using _Call_Helper = CallableTypeHelper<_CallType>;
+        CheckCFuncArgValid<typename _Call_Helper::arg_tuple_t> checkParam;
+        (void)checkParam;
+        bool bFuncObj = _Call_Helper::callable_id == CallableIdType::FUNCTION_OBJECT;
+        if (bFuncObj)
         {
-            using call_t = typename CallableTypeHelper< std::decay_t<_FuncType> >;
-            CheckCFuncArgValid<call_t::arg_tuple_t> checkParam;
-            (void)checkParam;
+            using _FuncObj_Store_t = std::shared_ptr<void>;
+            _FuncObj_Store_t * sp = (_FuncObj_Store_t*)ppf;
             return luaCFunctionDispatcher<
-                call_t::callable_id,
-                std::is_void<call_t::result_t>::value,
-                call_t,
-                call_t::arg_index_t>::Apply(pLua, *(_FuncType*)ppf);
+                _Call_Helper::callable_id,
+                std::is_void<typename _Call_Helper::result_t>::value,
+                _Call_Helper,
+                typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)(sp->get()));
         }
+        else
+        {
+            return luaCFunctionDispatcher<
+                _Call_Helper::callable_id,
+                std::is_void<typename _Call_Helper::result_t>::value,
+                _Call_Helper,
+                typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)ppf);
+        }
+    }
+
+//----分情况注册回调函数--------------------------------------------------
+
+    //函数对象析构
+    template<class T>
+    int FunctionObjectGcHelper(lua_State * pLua)
+    {
+        T * p = (T*)lua_touserdata(pLua, 1);
+        p->~T();
         return 0;
     }
+
+    template<bool bFuncObj = true>
+    struct PushCppCallableDispatcher
+    {
+        //函数对象回调注册
+        template<class _CallType>
+        static void PushImpl(lua_State * pLua, _CallType && pf)
+        {
+            using _Call_t = std::decay_t<_CallType>;
+            using _FuncObj_Store_t = std::shared_ptr<void>;
+            _FuncObj_Store_t * pObj = (_FuncObj_Store_t *)lua_newuserdata(pLua, sizeof(_FuncObj_Store_t));
+            ::new (pObj)_FuncObj_Store_t();
+            *pObj = std::make_shared<_Call_t>(std::forward<_CallType>(pf));
+            if (luaL_newmetatable(pLua, "{BEB170D0-0C27-4AE7-9891-6487B608C7C5}") > 0)
+            {
+                //创建元表进行垃圾回收
+                lua_pushcfunction(pLua, FunctionObjectGcHelper<_FuncObj_Store_t>);
+                lua_setfield(pLua, -2, "__gc");
+            }
+            //关联userdata到垃圾回收元素中
+            lua_setmetatable(pLua, -2);
+            assert(LUA_TUSERDATA == lua_type(pLua, -1));
+            ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t>, 1);
+        }
+    };
+
+    template<>
+    struct PushCppCallableDispatcher<false>
+    {
+        //其它调用类型回调注册
+        template<class _CallType>
+        static void PushImpl(lua_State * pLua, _CallType && pf)
+        {
+            using _Call_t = std::decay_t<_CallType>;
+            _Call_t * ppf = (_Call_t *)lua_newuserdata(pLua, sizeof(_Call_t));
+            assert(ppf);
+            *ppf = (_Call_t)pf;
+            ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t>, 1);
+        }
+    };
 }
 
 /** 向栈上压入C++调用
 @param[in,out] pLua lua状态指针
-@param[in] pf C++调用指针, 目前不支持参数中的左值引用的调用类型
+@param[in] pf C++调用, _CallType 传值, 自动把函数转成指向函数的指针, 并且隐含保证了函数对象是可复制的.
+             目前不支持参数中的左值引用的调用类型,
 */
-template<class _FuncType>
-void push_cpp_callable_to_lua(lua_State * pLua, _FuncType pf)
+template<class _CallType>
+void push_cpp_callable_to_lua(lua_State * pLua, _CallType && pf)
 {
-    //_FuncType 传值, 自动把函数转成指向函数的指针
-    assert(pf);
     ::luaL_checkstack(pLua, 1, "too many upvalues");
-    void * ppf = lua_newuserdata(pLua, sizeof(pf));
-    assert(ppf);
-    //把调用指针写入upvalue
-    std::memcpy(ppf, &pf, sizeof(pf));
-    ::lua_pushcclosure(pLua, Internal::MainLuaCFunctionCall<_FuncType>, 1);
+    Internal::PushCppCallableDispatcher<
+        CallableTypeHelper<
+            std::decay_t<_CallType> >::callable_id == CallableIdType::FUNCTION_OBJECT>::
+        PushImpl(pLua, std::forward<_CallType>(pf));
 }
 
 
@@ -204,10 +294,11 @@ void push_cpp_callable_to_lua(lua_State * pLua, _FuncType pf)
 特性总结:
 1. 支持函数指针,成员函数指针,成员变量指针;
 2. lua脚本中调用时,参数个数要和C++调用时的个数相同, 且一一对应, 自定义类型如有必要, 需重载<<和>>运算符;
-2. lua调用C++的成员函数或成员变量时, 第一个参数必须传C++对象指针, 剩下的参数与该成员函数的参数相同, 
-   成员变量调用则没有其它参数.
-3. 如果C++调用的参数列表中有默认值, 默认值不会生效.
-4. 不支持C语言风格的可变数量参数
+3. lua调用C++的成员函数或成员变量时, 第一个参数必须传C++对象指针, 剩下的参数与该成员函数的参数相同, 
+   成员变量调用则没有其它参数; 函数对象调用时不需要对象指针, 但需要保证lua回调时一些对象的生命期,比如Lambda
+   捕获列表中的引用等.
+4. 如果C++调用的参数列表中有默认值, 默认值不会生效.
+5. 不支持C语言风格的可变数量参数
 */
 
 /** 定义一个注册函数
@@ -225,7 +316,7 @@ void registerFuncName(lua_State * pLua) \
 
 /** 添加一个C++调用到lua, 并且与一个字符串关联起来
 @param[in] luaFuncName: lua脚本中调用时所用的名字, const char *
-@param[in] cppCallable: C++调用指针, 由push_cpp_callable_to_lua实现,具体限制参照该函数注释
+@param[in] cppCallable: C++调用, 由push_cpp_callable_to_lua实现,具体限制参照该函数注释
 */
 #define ENTRY_LUA_CPP_MAP_IMPLEMENT(luaFuncName, cppCallable) \
     shr::push_cpp_callable_to_lua(pLua, cppCallable); \

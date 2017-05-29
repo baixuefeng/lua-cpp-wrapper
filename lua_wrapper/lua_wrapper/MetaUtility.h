@@ -231,6 +231,7 @@ enum class CallableIdType
     POINTER_TO_FUNCTION,
     POINTER_TO_MEMBER_FUNCTION,
     POINTER_TO_MEMBER_DATA,
+    FUNCTION_OBJECT
 };
 
 /* 调用类型辅助
@@ -241,13 +242,13 @@ arg_index_t, 参数的序列号类型, ArgIndex<...>
 class_t, (只有成员函数指针和成员指针才定义), 类类型
 callable_id, 值,CallableIdType中定义的类型值
  */
-template<class T>
+template<class T, bool= std::is_class<T>::value>
 struct CallableTypeHelper;
 
 //函数类型特化
 #define FUNCTION_HELPER(CALL_OPT, NO_USE) \
 template<class _RetType, class... _ArgType> \
-struct CallableTypeHelper<_RetType CALL_OPT (_ArgType...)> \
+struct CallableTypeHelper<_RetType CALL_OPT (_ArgType...), false> \
 { \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
@@ -260,7 +261,7 @@ NON_MEMBER_CALL_MACRO(FUNCTION_HELPER, )
 //函数指针类型特化
 #define POINTER_TO_FUNCTION_HELPER(CALL_OPT, NO_USE) \
 template<class _RetType, class... _ArgType> \
-struct CallableTypeHelper<_RetType(CALL_OPT * )(_ArgType...)> \
+struct CallableTypeHelper<_RetType(CALL_OPT * )(_ArgType...), false> \
 { \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
@@ -273,7 +274,7 @@ NON_MEMBER_CALL_MACRO(POINTER_TO_FUNCTION_HELPER, )
 //成员函数指针类型特化
 #define POINTER_TO_MEMBER_FUNCTION_HELPER(CALL_OPT, NO_USE, CV_OPT) \
 template<class _RetType, class _ClassType, class... _ArgType> \
-struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT> \
+struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT, false> \
 { \
     using class_t = _ClassType; \
     using result_t = _RetType; \
@@ -286,13 +287,24 @@ CALLABLE_MEMBER_CALL_CV(POINTER_TO_MEMBER_FUNCTION_HELPER, )
 
 //成员指针类型特化
 template<class _RetType, class _ClassType>
-struct CallableTypeHelper<_RetType _ClassType::* >
+struct CallableTypeHelper<_RetType _ClassType::*, false>
 {
     using class_t = _ClassType;
     using result_t = _RetType;
     using arg_tuple_t = std::tuple<>;
     using arg_index_t = typename MakeArgIndex<>::type;
     static const CallableIdType callable_id = CallableIdType::POINTER_TO_MEMBER_DATA;
+};
+
+//函数对象、Lambda表达式类型特化
+template<class T>
+struct CallableTypeHelper<T, true>
+{
+    using class_t = std::decay_t<T>;
+    using result_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::result_t;
+    using arg_tuple_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::arg_tuple_t;
+    using arg_index_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::arg_index_t;
+    static const CallableIdType callable_id = CallableIdType::FUNCTION_OBJECT;
 };
 
 SHARELIB_END_NAMESPACE

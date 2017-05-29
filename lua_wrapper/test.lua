@@ -11,3 +11,6 @@ for i = 1, #compomentTable[2] do
 print(compomentTable[2][i]);
 end
 print(compomentTable[3]);
+print(LibTest.FuncObjAdd(22,33));
+print(LibTest.FuncObjSub(22,33));
+print(LibTest.StrComp("∆¥“Ù≈≈–Ú", "≈≈–Ú∆¥“Ù"));

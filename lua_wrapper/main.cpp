@@ -86,6 +86,30 @@ struct LuaTestClass
     std::wstring m_str;
 };
 
+struct StrCmp
+{
+    SHARELIB_DISABLE_COPY_CLASS(StrCmp);
+
+    StrCmp()
+    {
+    }
+    ~StrCmp()
+    {
+    }
+
+    StrCmp(StrCmp&&)
+    {
+    }
+    StrCmp& operator=(StrCmp &&)
+    {
+    }
+
+    bool operator()(const std::string str1, const std::string str2)
+    {
+        return std::locale("")(str1, str2);
+    }
+};
+
 BEGIN_LUA_CPP_MAP_IMPLEMENT(RegisterTestLuaFunc, "LibTest")
 ENTRY_LUA_CPP_MAP_IMPLEMENT("TestFunc1", TestFunc1)
 ENTRY_LUA_CPP_MAP_IMPLEMENT("SetStr", &LuaTestClass::SetStr)
@@ -94,6 +118,9 @@ ENTRY_LUA_CPP_MAP_IMPLEMENT("SetCompoment", &LuaTestClass::SetCompoment)
 ENTRY_LUA_CPP_MAP_IMPLEMENT("MemberStr", &LuaTestClass::m_str)
 ENTRY_LUA_CPP_MAP_IMPLEMENT("MemberCompoment", &LuaTestClass::m_wrapCompoment)
 ENTRY_LUA_CPP_MAP_IMPLEMENT("MessageBox", &::MessageBox)
+ENTRY_LUA_CPP_MAP_IMPLEMENT("FuncObjAdd", [](int a, int b)->int{ return a + b; })
+ENTRY_LUA_CPP_MAP_IMPLEMENT("FuncObjSub", [](int a, int b)->int{ return a - b; })
+ENTRY_LUA_CPP_MAP_IMPLEMENT("StrComp", StrCmp{})
 END_LUA_CPP_MAP_IMPLEMENT()
 
 void TestLuaCpp()
