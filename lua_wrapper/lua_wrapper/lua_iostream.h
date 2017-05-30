@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string>
+#include <locale>
 #include <codecvt>
 #include <cstdlib>
 #include <type_traits>
@@ -75,8 +76,8 @@ public:
 #ifdef LUA_CODE_UTF8
             std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
 #else
-            auto & fct = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(std::locale{});
-            std::wstring_convert<std::decay_t<decltype(fct)> > cvt(&fct);
+            auto & fct = std::use_facet<std::codecvt_utf16<wchar_t> >(std::locale{});
+            std::wstring_convert<std::remove_reference_t<decltype(fct)> > cvt(&fct);
 #endif
             return (*this) << cvt.to_bytes(value).c_str();
         }
@@ -204,8 +205,8 @@ public:
 #ifdef LUA_CODE_UTF8
                 std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > cvt;
 #else
-                auto & fct = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(std::locale{});
-                std::wstring_convert<std::decay_t<decltype(fct)> > cvt(&fct);
+                auto & fct = std::use_facet<std::codecvt_utf16<wchar_t> >(std::locale{});
+                std::wstring_convert<std::remove_reference_t<decltype(fct)> > cvt(&fct);
 #endif
                 value = cvt.from_bytes(temp);
             }

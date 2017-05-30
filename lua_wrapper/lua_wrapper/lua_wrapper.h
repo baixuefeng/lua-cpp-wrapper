@@ -54,14 +54,14 @@ namespace Internal
 
     //模板特化, 函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType pf)
         {
             (void)pLua;//消除0参0返回值时的警告
             pf(lua_io_dispatcher<
-                std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
+                std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
                 >::from_lua(pLua, index + 1)...);
             return 0;
         }
@@ -69,7 +69,7 @@ namespace Internal
 
     //模板特化, 函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType pf)
@@ -78,7 +78,7 @@ namespace Internal
             return lua_io_dispatcher<result_type>::to_lua(
                 pLua,
                 pf(lua_io_dispatcher<
-                    std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
+                    std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
                     >::from_lua(pLua, index + 1)...)
                 );
         }
@@ -86,7 +86,7 @@ namespace Internal
 
     //模板特化, 成员函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType pmf)
@@ -97,7 +97,7 @@ namespace Internal
             if (pThis)
             {
                 (pThis->*pmf)(lua_io_dispatcher <
-                    std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
+                    std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
                     >::from_lua(pLua, index + 2)...);
             }
             return 0;
@@ -106,7 +106,7 @@ namespace Internal
 
     //模板特化, 成员函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType pmf)
@@ -120,7 +120,7 @@ namespace Internal
                 return lua_io_dispatcher<result_type>::to_lua(
                     pLua,
                     (pThis->*pmf)(lua_io_dispatcher<
-                        std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type>
+                        std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type>
                         >::from_lua(pLua, index + 2)...)
                     );
             }
@@ -133,7 +133,7 @@ namespace Internal
 
     //模板特化, 成员变量指针
     template<class _CallableType>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, ArgIndex<> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, IntegerSequence<> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType pmd)
@@ -158,13 +158,13 @@ namespace Internal
 
     //模板特化, 函数对象, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, true, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType && pObj)
         {
             pObj(lua_io_dispatcher<
-                std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
+                std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
             >::from_lua(pLua, index + 1)...);
             return 0;
         }
@@ -172,7 +172,7 @@ namespace Internal
 
     //模板特化, 函数对象, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, false, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
         static int Apply(lua_State * pLua, _PfType && pObj)
@@ -181,7 +181,7 @@ namespace Internal
             return lua_io_dispatcher<result_type>::to_lua(
                 pLua,
                 pObj(lua_io_dispatcher<
-                    std::decay_t<std::tuple_element<index, typename _CallableType::arg_tuple_t>::type>
+                    std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type>
                 >::from_lua(pLua, index + 1)...)
                 );
         }
@@ -249,7 +249,7 @@ namespace Internal
                 lua_pushcfunction(pLua, FunctionObjectGcHelper<_FuncObj_Store_t>);
                 lua_setfield(pLua, -2, "__gc");
             }
-            //关联userdata到垃圾回收元素中
+            //关联userdata到垃圾回收元表中
             lua_setmetatable(pLua, -2);
             assert(LUA_TUSERDATA == lua_type(pLua, -1));
             ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t>, 1);
@@ -282,9 +282,8 @@ void push_cpp_callable_to_lua(lua_State * pLua, _CallType && pf)
 {
     ::luaL_checkstack(pLua, 1, "too many upvalues");
     Internal::PushCppCallableDispatcher<
-        CallableTypeHelper<
-            std::decay_t<_CallType> >::callable_id == CallableIdType::FUNCTION_OBJECT>::
-        PushImpl(pLua, std::forward<_CallType>(pf));
+        CallableTypeHelper<std::decay_t<_CallType> >::callable_id == CallableIdType::FUNCTION_OBJECT
+        >::PushImpl(pLua, std::forward<_CallType>(pf));
 }
 
 
@@ -292,7 +291,7 @@ void push_cpp_callable_to_lua(lua_State * pLua, _CallType && pf)
 /* 这三个宏实现了一个函数, 用来完成lua调用C++的映射, 创建lua_State后, 调用该函数,
 就把这些C++调用与lua关联起来了.
 特性总结:
-1. 支持函数指针,成员函数指针,成员变量指针;
+1. 支持函数指针,成员函数指针,成员变量指针,函数对象,Lambda表达式;
 2. lua脚本中调用时,参数个数要和C++调用时的个数相同, 且一一对应, 自定义类型如有必要, 需重载<<和>>运算符;
 3. lua调用C++的成员函数或成员变量时, 第一个参数必须传C++对象指针, 剩下的参数与该成员函数的参数相同, 
    成员变量调用则没有其它参数; 函数对象调用时不需要对象指针, 但需要保证lua回调时一些对象的生命期,比如Lambda

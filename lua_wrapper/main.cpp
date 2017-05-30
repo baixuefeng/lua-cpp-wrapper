@@ -102,6 +102,7 @@ struct StrCmp
     }
     StrCmp& operator=(StrCmp &&)
     {
+        return *this;
     }
 
     bool operator()(const std::string str1, const std::string str2)
@@ -146,7 +147,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
     std::locale::global(std::locale{ "" });
     TestLuaCpp();
-	return 0;
+    return 0;
 }
 
 

@@ -8,84 +8,76 @@ SHARELIB_BEGIN_NAMESPACE
 //----把指针或引用统一转化为引用-------------------------------------------------------------------------------
 namespace Internal
 {
-    template<class T, bool isPointer, bool isLValue>
+    template<class T, 
+        bool isPointer = std::is_pointer<typename std::remove_reference<T>::type>::value, 
+        bool = std::is_lvalue_reference<T>::value>
     struct ReferenceTypeHelper
     {
-        using reference_type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type &;
+        static const bool is_pointer = isPointer;
+        using type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type &;
     };
 
     template<class T>
     struct ReferenceTypeHelper<T, false, false>
     {
-        using reference_type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type &&;
+        static const bool is_pointer = false;
+        using type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type &&;
+    };
+
+    template<class T, bool = ReferenceTypeHelper<T>::is_pointer>
+    struct ToReferenceImpl
+    {
+        static typename ReferenceTypeHelper<T>::type ToReference(T && arg)
+        {
+            return static_cast<typename ReferenceTypeHelper<T>::type>(*arg);
+        }
     };
 
     template<class T>
-    struct ToReferenceImpl
+    struct ToReferenceImpl<T, false>
     {
-        static const bool s_bPointer = std::is_pointer<typename std::remove_reference<T>::type>::value;
-
-        using type = typename ReferenceTypeHelper<
-            T,
-            s_bPointer,
-            std::is_lvalue_reference<T>::value>::reference_type;
-
-        template<bool isPointer = s_bPointer>
-        static type ToReference(T && arg)
+        static typename ReferenceTypeHelper<T>::type ToReference(T && arg)
         {
-            return static_cast<type>(arg);
-        }
-
-        template<>
-        static type ToReference<true>(T && arg)
-        {
-            return static_cast<type>(*arg);
+            return static_cast<typename ReferenceTypeHelper<T>::type>(arg);
         }
     };
 }
 
 //把指针或引用统一转化为引用
 template<class T>
-typename Internal::ToReferenceImpl<T>::type to_reference(T && arg)
+typename Internal::ReferenceTypeHelper<T>::type to_reference(T && arg)
 {
     return Internal::ToReferenceImpl<T>::ToReference(std::forward<T>(arg));
 }
 
-//----根据可变参数生成参数序列-----------------------------------------------------------------------
+//----生成参数序列-----------------------------------------------------------------------
 
 template<size_t ... Index>
-struct ArgIndex
+struct IntegerSequence
 {};
 
 namespace Internal
 {
-    template<class T, class ... Rest>
-    struct MakeArgIndexHelper
+    template<class T, size_t N>
+    struct MakeSequenceHelper;
+
+    template<size_t ... Index>
+    struct MakeSequenceHelper<IntegerSequence<Index...>, 0>
     {
-        using type = T;
+        using type = IntegerSequence<Index...>;
     };
 
-    template<size_t ... Index, class T, class ... Rest>
-    struct MakeArgIndexHelper<ArgIndex<Index...>, T, Rest ... > :
-        public MakeArgIndexHelper<ArgIndex<sizeof...(Rest), Index...>, Rest...>
+    template<size_t ... Index, size_t N>
+    struct MakeSequenceHelper<IntegerSequence<Index...>, N>
+        : public MakeSequenceHelper<IntegerSequence<N - 1, Index...>, N - 1>
     {};
 }
 
 //根据可变参数生成参数序列,从0开始
-template<class ... T>
-struct MakeArgIndex
+template<size_t N>
+struct MakeSequence
+    : public Internal::MakeSequenceHelper<IntegerSequence<>, N>
 {
-    using type = typename Internal::MakeArgIndexHelper<ArgIndex<>, T... >::type;
-};
-
-//根据tuple生成参数序列,从0开始
-template<class T>
-struct MakeTupleIndex;
-
-template<class ... T>
-struct MakeTupleIndex<std::tuple<T...> >
-{
-    using type = typename Internal::MakeArgIndexHelper<ArgIndex<>, T... >::type;
 };
 
 //----判断类是否有成员类型------------------------------------------------------------------------
@@ -123,14 +115,16 @@ HAS_MEMBER_TYPE_IMPL(membername)
 */
 
 //是否有成员(函数,静态变量), 有bug, 当类是模板时总是true,屏蔽
-//#define HAS_MEMBER_IMPL(memberName) \
-//{ \
-//private: \
-//    template<class T>static auto DeclFunc(int, decltype(typename T::memberName) * = 0)->std::true_type; \
-//    template<class T>static auto DeclFunc(shr::Internal::WrapInt)->std::false_type; \
-//public: \
-//    static const bool value = decltype(DeclFunc<_ClassType>(0))::value; \
-//};
+/* 
+#define HAS_MEMBER_IMPL(memberName) \
+{ \
+private: \
+    template<class T>static auto DeclFunc(int, decltype(typename T::memberName) * = 0)->std::true_type; \
+    template<class T>static auto DeclFunc(shr::Internal::WrapInt)->std::false_type; \
+public: \
+    static const bool value = decltype(DeclFunc<_ClassType>(0))::value; \
+};
+*/
 
 //是否有成员(类型)
 #define HAS_MEMBER_TYPE_IMPL(memberType) \
@@ -238,7 +232,7 @@ enum class CallableIdType
 覆盖了函数,函数指针,成员函数指针,成员指针, 没有覆盖函数对象，定义了以下几种类型别名：
 result_t, 返回值类型；
 arg_tuple_t, 参数绑定成tuple的类型;
-arg_index_t, 参数的序列号类型, ArgIndex<...>
+arg_index_t, 参数的序列号类型, IntegerSequence<...>
 class_t, (只有成员函数指针和成员指针才定义), 类类型
 callable_id, 值,CallableIdType中定义的类型值
  */
@@ -252,7 +246,7 @@ struct CallableTypeHelper<_RetType CALL_OPT (_ArgType...), false> \
 { \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
-    using arg_index_t = typename MakeArgIndex<_ArgType...>::type; \
+    using arg_index_t = typename MakeSequence<sizeof...(_ArgType)>::type; \
     static const CallableIdType callable_id = CallableIdType::FUNCTION; \
 };
 NON_MEMBER_CALL_MACRO(FUNCTION_HELPER, )
@@ -265,7 +259,7 @@ struct CallableTypeHelper<_RetType(CALL_OPT * )(_ArgType...), false> \
 { \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
-    using arg_index_t = typename MakeArgIndex<_ArgType...>::type; \
+    using arg_index_t = typename MakeSequence<sizeof...(_ArgType)>::type; \
     static const CallableIdType callable_id = CallableIdType::POINTER_TO_FUNCTION; \
 };
 NON_MEMBER_CALL_MACRO(POINTER_TO_FUNCTION_HELPER, )
@@ -279,7 +273,7 @@ struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT,
     using class_t = _ClassType; \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
-    using arg_index_t = typename MakeArgIndex<_ArgType...>::type; \
+    using arg_index_t = typename MakeSequence<sizeof...(_ArgType)>::type; \
     static const CallableIdType callable_id = CallableIdType::POINTER_TO_MEMBER_FUNCTION; \
 };
 CALLABLE_MEMBER_CALL_CV(POINTER_TO_MEMBER_FUNCTION_HELPER, )
@@ -292,7 +286,7 @@ struct CallableTypeHelper<_RetType _ClassType::*, false>
     using class_t = _ClassType;
     using result_t = _RetType;
     using arg_tuple_t = std::tuple<>;
-    using arg_index_t = typename MakeArgIndex<>::type;
+    using arg_index_t = typename MakeSequence<0>::type;
     static const CallableIdType callable_id = CallableIdType::POINTER_TO_MEMBER_DATA;
 };
 
@@ -306,5 +300,8 @@ struct CallableTypeHelper<T, true>
     using arg_index_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::arg_index_t;
     static const CallableIdType callable_id = CallableIdType::FUNCTION_OBJECT;
 };
+
+#undef NON_MEMBER_CALL_MACRO
+#undef MEMBER_CALL_MACRO
 
 SHARELIB_END_NAMESPACE
