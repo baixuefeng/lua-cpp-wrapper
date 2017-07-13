@@ -294,7 +294,7 @@ lua_istream & lua_istream::operator>>(lua_table_key_t key)
     return *this;
 }
 
-void shr::lua_istream::cleanup_subtable(lua_istream & subTable)
+void lua_istream::cleanup_subtable(lua_istream & subTable)
 {
     (void)subTable;
     assert(!m_isEof);

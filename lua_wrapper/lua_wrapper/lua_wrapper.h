@@ -7,6 +7,7 @@ version: 0.2
 #include <cstdint>
 #include <initializer_list>
 #include <memory>
+#include <type_traits>
 #include "MacroDefBase.h"
 #include "lua_iostream.h"
 #include "MetaUtility.h"
@@ -57,10 +58,10 @@ namespace Internal
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pf)
+        static int Apply(lua_State * pLua, _PfType pfn)
         {
             (void)pLua;//消除0参0返回值时的警告
-            pf(lua_io_dispatcher<
+            pfn(lua_io_dispatcher<
                 std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
                 >::from_lua(pLua, index + 1)...);
             return 0;
@@ -72,12 +73,12 @@ namespace Internal
     struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pf)
+        static int Apply(lua_State * pLua, _PfType pfn)
         {
             using result_type = std::decay_t<typename _CallableType::result_t>;
             return lua_io_dispatcher<result_type>::to_lua(
                 pLua,
-                pf(lua_io_dispatcher<
+                pfn(lua_io_dispatcher<
                     std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
                     >::from_lua(pLua, index + 1)...)
                 );
@@ -161,9 +162,9 @@ namespace Internal
     struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType && pObj)
+        static int Apply(lua_State * pLua, _PfType && fnObj)
         {
-            pObj(lua_io_dispatcher<
+            fnObj(lua_io_dispatcher<
                 std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
             >::from_lua(pLua, index + 1)...);
             return 0;
@@ -175,12 +176,12 @@ namespace Internal
     struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType && pObj)
+        static int Apply(lua_State * pLua, _PfType && fnObj)
         {
             using result_type = std::decay_t<typename _CallableType::result_t>;
             return lua_io_dispatcher<result_type>::to_lua(
                 pLua,
-                pObj(lua_io_dispatcher<
+                fnObj(lua_io_dispatcher<
                     std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type>
                 >::from_lua(pLua, index + 1)...)
                 );
@@ -190,7 +191,7 @@ namespace Internal
 //----lua C函数的适配函数入口----------------------------------------
 
     //lua调用C的主函数,所有的C++调用都从这里转发出去
-    template<class _CallType>
+    template<class _CallType, bool bTrivialDestructor>
     int MainLuaCFunctionCall(lua_State * pLua)
     {
         //upvalue中第一个值固定为真实执行的调用值
@@ -199,18 +200,8 @@ namespace Internal
         using _Call_Helper = CallableTypeHelper<_CallType>;
         CheckCFuncArgValid<typename _Call_Helper::arg_tuple_t> checkParam;
         (void)checkParam;
-        bool bFuncObj = _Call_Helper::callable_id == CallableIdType::FUNCTION_OBJECT;
-        if (bFuncObj)
-        {
-            using _FuncObj_Store_t = std::shared_ptr<void>;
-            _FuncObj_Store_t * sp = (_FuncObj_Store_t*)ppf;
-            return luaCFunctionDispatcher<
-                _Call_Helper::callable_id,
-                std::is_void<typename _Call_Helper::result_t>::value,
-                _Call_Helper,
-                typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)(sp->get()));
-        }
-        else
+        bool bTrivial = bTrivialDestructor;//avoid warning
+        if (bTrivial)
         {
             return luaCFunctionDispatcher<
                 _Call_Helper::callable_id,
@@ -218,11 +209,21 @@ namespace Internal
                 _Call_Helper,
                 typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)ppf);
         }
+        else
+        {
+            using _FuncObj_Store_t = std::shared_ptr<void>;
+            _FuncObj_Store_t * pSpObj = (_FuncObj_Store_t*)ppf;
+            return luaCFunctionDispatcher<
+                _Call_Helper::callable_id,
+                std::is_void<typename _Call_Helper::result_t>::value,
+                _Call_Helper,
+                typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)(pSpObj->get()));
+        }
     }
 
 //----分情况注册回调函数--------------------------------------------------
 
-    //函数对象析构
+    //destructor
     template<class T>
     int FunctionObjectGcHelper(lua_State * pLua)
     {
@@ -231,10 +232,25 @@ namespace Internal
         return 0;
     }
 
-    template<bool bFuncObj = true>
+    template<bool bTrivialDestructor = true>
     struct PushCppCallableDispatcher
     {
-        //函数对象回调注册
+        //trivial destructor
+        template<class _CallType>
+        static void PushImpl(lua_State * pLua, _CallType && pf)
+        {
+            using _Call_t = std::decay_t<_CallType>;
+            _Call_t * ppf = (_Call_t *)lua_newuserdata(pLua, sizeof(_Call_t));
+            assert(ppf);
+            ::new (ppf)_Call_t(std::forward<_CallType>(pf));
+            ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t, true>, 1);
+        }
+    };
+
+    template<>
+    struct PushCppCallableDispatcher<false>
+    {
+        //no trivial destructor
         template<class _CallType>
         static void PushImpl(lua_State * pLua, _CallType && pf)
         {
@@ -245,29 +261,15 @@ namespace Internal
             *pObj = std::make_shared<_Call_t>(std::forward<_CallType>(pf));
             if (luaL_newmetatable(pLua, "{BEB170D0-0C27-4AE7-9891-6487B608C7C5}") > 0)
             {
-                //创建元表进行垃圾回收
+                //创建元表进行垃圾回收,一个元表只有一个垃圾回收实现,但元表中关联的userdata有多种,
+                //因此使用shared_ptr<void>封装,进行统一析构
                 lua_pushcfunction(pLua, FunctionObjectGcHelper<_FuncObj_Store_t>);
                 lua_setfield(pLua, -2, "__gc");
             }
             //关联userdata到垃圾回收元表中
             lua_setmetatable(pLua, -2);
             assert(LUA_TUSERDATA == lua_type(pLua, -1));
-            ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t>, 1);
-        }
-    };
-
-    template<>
-    struct PushCppCallableDispatcher<false>
-    {
-        //其它调用类型回调注册
-        template<class _CallType>
-        static void PushImpl(lua_State * pLua, _CallType && pf)
-        {
-            using _Call_t = std::decay_t<_CallType>;
-            _Call_t * ppf = (_Call_t *)lua_newuserdata(pLua, sizeof(_Call_t));
-            assert(ppf);
-            *ppf = (_Call_t)pf;
-            ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t>, 1);
+            ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t, false>, 1);
         }
     };
 }
@@ -282,7 +284,7 @@ void push_cpp_callable_to_lua(lua_State * pLua, _CallType && pf)
 {
     ::luaL_checkstack(pLua, 1, "too many upvalues");
     Internal::PushCppCallableDispatcher<
-        CallableTypeHelper<std::decay_t<_CallType> >::callable_id == CallableIdType::FUNCTION_OBJECT
+        std::is_trivially_destructible<std::decay_t<_CallType> >::value
         >::PushImpl(pLua, std::forward<_CallType>(pf));
 }
 

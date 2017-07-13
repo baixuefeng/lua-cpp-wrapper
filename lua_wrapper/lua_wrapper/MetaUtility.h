@@ -13,14 +13,14 @@ namespace Internal
         bool = std::is_lvalue_reference<T>::value>
     struct ReferenceTypeHelper
     {
-        static const bool is_pointer = isPointer;
+        enum : bool { is_pointer = isPointer };
         using type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type &;
     };
 
     template<class T>
     struct ReferenceTypeHelper<T, false, false>
     {
-        static const bool is_pointer = false;
+        enum : bool { is_pointer = false };
         using type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type &&;
     };
 
@@ -120,7 +120,7 @@ HAS_MEMBER_TYPE_IMPL(membername)
 { \
 private: \
     template<class T>static auto DeclFunc(int, decltype(typename T::memberName) * = 0)->std::true_type; \
-    template<class T>static auto DeclFunc(shr::Internal::WrapInt)->std::false_type; \
+    template<class T>static auto DeclFunc(Internal::WrapInt)->std::false_type; \
 public: \
     static const bool value = decltype(DeclFunc<_ClassType>(0))::value; \
 };
@@ -131,9 +131,9 @@ public: \
 { \
 private: \
     template<class T>static auto DeclFunc(int, typename T::memberType * = 0)->std::true_type; \
-    template<class T>static auto DeclFunc(shr::Internal::WrapInt)->std::false_type; \
+    template<class T>static auto DeclFunc(Internal::WrapInt)->std::false_type; \
 public: \
-    static const bool value = decltype(DeclFunc<_ClassType>(0))::value; \
+    enum{ value = decltype(DeclFunc<_ClassType>(0))::value }; \
 };
 
 //----函数类型辅助----------------------------------------------------------------------------
@@ -229,7 +229,7 @@ enum class CallableIdType
 };
 
 /* 调用类型辅助
-覆盖了函数,函数指针,成员函数指针,成员指针, 没有覆盖函数对象，定义了以下几种类型别名：
+覆盖了函数,函数指针,成员函数指针,成员指针,函数对象，定义了以下几种类型别名：
 result_t, 返回值类型；
 arg_tuple_t, 参数绑定成tuple的类型;
 arg_index_t, 参数的序列号类型, IntegerSequence<...>
@@ -303,5 +303,6 @@ struct CallableTypeHelper<T, true>
 
 #undef NON_MEMBER_CALL_MACRO
 #undef MEMBER_CALL_MACRO
+#undef CALLABLE_MEMBER_CALL_CV
 
 SHARELIB_END_NAMESPACE
