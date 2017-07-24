@@ -275,9 +275,10 @@ namespace Internal
 }
 
 /** 向栈上压入C++调用
-@param[in,out] pLua lua状态指针
-@param[in] pf C++调用, _CallType 传值, 自动把函数转成指向函数的指针, 并且隐含保证了函数对象是可复制的.
-             目前不支持参数中的左值引用的调用类型,
+@param[in,out] pLua  pointer of lua_Satate
+@param[in] pf C++ callable object, restriction: support "copy construct(left value)"
+              or "move construct(right value)". 
+              The callable object can't have left value reference parameter.
 */
 template<class _CallType>
 void push_cpp_callable_to_lua(lua_State * pLua, _CallType && pf)
@@ -298,6 +299,10 @@ void push_cpp_callable_to_lua(lua_State * pLua, _CallType && pf)
 3. lua调用C++的成员函数或成员变量时, 第一个参数必须传C++对象指针, 剩下的参数与该成员函数的参数相同, 
    成员变量调用则没有其它参数; 函数对象调用时不需要对象指针, 但需要保证lua回调时一些对象的生命期,比如Lambda
    捕获列表中的引用等.
+   注意一种可能出现的隐蔽错误:注册了一个基类的成员函数,然后传入了派生类的对象指针,用该指针调用成员函数.
+   这里实际发生的处理顺序是, Derived* 转成 void*存入lua, 执行lua脚本时, 从lua中取出void*转成Base*,而后
+   调用成员函数,因此如果经过这个转换之后指针不正确,那么就会出问题.比如Derived类从A和B继承,A在前,B在后,
+   注册了一个B中的成员函数,传入的是Derived*,该指针转成void*后再转成B*,这时候就是不正确的.
 4. 如果C++调用的参数列表中有默认值, 默认值不会生效.
 5. 不支持C语言风格的可变数量参数
 */
@@ -312,7 +317,7 @@ void registerFuncName(lua_State * pLua) \
     const char * pLib = pLibName; \
     assert(pLua); \
     assert(pLib); \
-    shr::lua_stack_check stackChecker(pLua); \
+    shr::lua_stack_guard_checker stackChecker(pLua); \
     ::lua_newtable(pLua); 
 
 /** 添加一个C++调用到lua, 并且与一个字符串关联起来
@@ -340,6 +345,8 @@ public:
 
     lua_state_wrapper();
     ~lua_state_wrapper();
+    lua_state_wrapper(lua_state_wrapper&& lua2);
+    lua_state_wrapper& operator=(lua_state_wrapper&& lua2);
     bool create();
     void close();
     void attach(lua_State * pState);
@@ -359,9 +366,10 @@ public:
     void set_variable(const char * pName, T value)
     {
         assert(m_pLuaState);
+        assert(pName);
         if (m_pLuaState && pName)
         {
-            lua_stack_check check(m_pLuaState);
+            lua_stack_guard_checker check(m_pLuaState);
             lua_io_dispatcher<std::decay_t<T>>::to_lua(m_pLuaState, value);
             lua_setglobal(m_pLuaState, pName);
         }
@@ -370,15 +378,33 @@ public:
     //从lua中分配一块命名内存, 返回内存地址, 栈保持不变
     void * alloc_user_data(const char * pName, size_t size);
 
+    //set a global function(function object), it's name is pFuncName
+    template<class T>
+    void set_global_function(const char * pFuncName, T && pf)
+    {
+        assert(m_pLuaState);
+        assert(pFuncName);
+        if (m_pLuaState && pFuncName)
+        {
+            lua_stack_guard_checker check(m_pLuaState);
+            push_cpp_callable_to_lua(m_pLuaState, std::forward<T>(pf));
+            lua_setglobal(m_pLuaState, pFuncName);
+        }
+    }
+
 //----执行脚本----------------------------
 
     //下面两个,加载并执行, 加载的时间代价: 毫秒量级
     bool do_lua_file(const char * pFileName);
+    bool do_lua_file(const wchar_t * pFileName);
     bool do_lua_string(const char * pString);
+    bool do_lua_string(const wchar_t * pString);
 
     //下面两个,只加载不执行,而后可以多次执行，run(),两种类型的执行脚本方法不可混用.
     bool load_lua_file(const char * pFileName);
+    bool load_lua_file(const wchar_t * pFileName);
     bool load_lua_string(const char * pString);
+    bool load_lua_string(const wchar_t * pString);
 
     /* 执行.
     本质上是把加载的lua脚本转变成lua函数,因此多次执行的lua上下文是相同的. 比如, 一个全局变量初始为0，

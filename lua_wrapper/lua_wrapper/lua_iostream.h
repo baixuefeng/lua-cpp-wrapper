@@ -300,7 +300,7 @@ struct lua_io_dispatcher
     */
     static T from_lua(lua_State * pL, int index, T defaultValue = T{})
     {
-        lua_stack_check checker(pL);
+        lua_stack_guard_checker checker(pL);
         T temp{};
         lua_istream is(pL, index);
         if (is >> temp)
@@ -326,7 +326,7 @@ struct lua_io_dispatcher<T, true>
 
     static T from_lua(lua_State * pL, int index, T defaultValue = T{})
     {
-        lua_stack_check checker(pL);
+        lua_stack_guard_checker checker(pL);
         return static_cast<T>(lua_io_dispatcher<_UType>::from_lua(pL, index, defaultValue));
     }
 };
@@ -344,7 +344,7 @@ struct lua_io_dispatcher<const char*, false>
 
     static const char* from_lua(lua_State * pL, int index, const char * defaultValue = "")
     {
-        lua_stack_check checker(pL);
+        lua_stack_guard_checker checker(pL);
         if (lua_type(pL, index) == LUA_TSTRING)
         {
             return lua_tostring(pL, index);
@@ -402,7 +402,7 @@ struct lua_io_dispatcher<const wchar_t*, false>
 
     static Internal::StdWstringWrapper from_lua(lua_State * pL, int index, const wchar_t * defaultValue = L"")
     {
-        lua_stack_check checker(pL);
+        lua_stack_guard_checker checker(pL);
         std::wstring temp;
         lua_istream is(pL, index);
         if (is >> temp)

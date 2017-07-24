@@ -5,6 +5,9 @@
 
 /* lua脚本使用的编码
 如果使用utf8, 定义该宏; 未定义时使用 std::local{} 的编码, 可以使用 std::locale::global修改编码
+选择哪种编码通常取决于当前编译器的默认char*编码,
+如VC中文环境就不使用UTF8,并且设置 std::locale::global(std::locale(""));
+而g++中要使用UTF8.
 */
 //#define LUA_CODE_UTF8
 
@@ -13,10 +16,10 @@ SHARELIB_BEGIN_NAMESPACE
 //----lua栈保护的辅助类-------------------------------------------------------------
 
 //检查栈元素数量是否变更的辅助类,不会自动弹出多出的元素，只有debug模式有效
-class lua_stack_check
+class lua_stack_guard_checker
 {
 public:
-    explicit lua_stack_check(lua_State * pL)
+    explicit lua_stack_guard_checker(lua_State * pL)
 #ifndef NDEBUG
         : m_pL(pL)
         , m_nCount(lua_gettop(pL))
@@ -24,7 +27,7 @@ public:
     {
         (void)pL;
     }
-    ~lua_stack_check()
+    ~lua_stack_guard_checker()
     {
 #ifndef NDEBUG
         assert(m_nCount == lua_gettop(m_pL));
