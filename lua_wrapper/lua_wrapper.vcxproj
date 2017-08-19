@@ -111,8 +111,8 @@
     <ClCompile Include="lua\src\lutf8lib.c" />
     <ClCompile Include="lua\src\lvm.c" />
     <ClCompile Include="lua\src\lzio.c" />
-    <ClCompile Include="lua_wrapper\lua_iostream.cpp" />
-    <ClCompile Include="lua_wrapper\lua_wrapper.cpp" />
+    <ClCompile Include="lua_wrapper\detail\lua_iostream.cpp" />
+    <ClCompile Include="lua_wrapper\detail\lua_wrapper.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
