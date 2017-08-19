@@ -1,4 +1,4 @@
-﻿#include "lua_iostream.h"
+﻿#include "../lua_iostream.h"
 
 SHARELIB_BEGIN_NAMESPACE
 

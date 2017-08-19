@@ -22,6 +22,9 @@
     <Filter Include="lua_wrapper">
       <UniqueIdentifier>{96c73017-6f29-4d8f-a100-ef7558df1dcc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lua_wrapper\detail">
+      <UniqueIdentifier>{8c65463a-c04a-449e-a03d-6f810e79e731}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -126,11 +129,11 @@
     <ClCompile Include="lua\src\lzio.c">
       <Filter>lua\src</Filter>
     </ClCompile>
-    <ClCompile Include="lua_wrapper\lua_iostream.cpp">
-      <Filter>lua_wrapper</Filter>
+    <ClCompile Include="lua_wrapper\detail\lua_iostream.cpp">
+      <Filter>lua_wrapper\detail</Filter>
     </ClCompile>
-    <ClCompile Include="lua_wrapper\lua_wrapper.cpp">
-      <Filter>lua_wrapper</Filter>
+    <ClCompile Include="lua_wrapper\detail\lua_wrapper.cpp">
+      <Filter>lua_wrapper\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -212,6 +215,12 @@
     <ClInclude Include="lua\src\lzio.h">
       <Filter>lua\src</Filter>
     </ClInclude>
+    <ClInclude Include="lua_wrapper\MacroDefBase.h">
+      <Filter>lua_wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="lua_wrapper\MetaUtility.h">
+      <Filter>lua_wrapper</Filter>
+    </ClInclude>
     <ClInclude Include="lua_wrapper\lua_iostream.h">
       <Filter>lua_wrapper</Filter>
     </ClInclude>
@@ -219,12 +228,6 @@
       <Filter>lua_wrapper</Filter>
     </ClInclude>
     <ClInclude Include="lua_wrapper\lua_wrapper_base.h">
-      <Filter>lua_wrapper</Filter>
-    </ClInclude>
-    <ClInclude Include="lua_wrapper\MacroDefBase.h">
-      <Filter>lua_wrapper</Filter>
-    </ClInclude>
-    <ClInclude Include="lua_wrapper\MetaUtility.h">
       <Filter>lua_wrapper</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿#include "lua_wrapper.h"
+﻿#include "../lua_wrapper.h"
 #include <string>
 
 SHARELIB_BEGIN_NAMESPACE
