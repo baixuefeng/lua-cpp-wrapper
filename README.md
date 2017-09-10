@@ -61,7 +61,7 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 
     //注册函数指针
     template<class _FuncType>
-    void	push_cpp_callable_to_lua(lua_State * pLua, _FuncType pf)
+    void push_cpp_callable_to_lua(lua_State * pLua, _FuncType pf)
     {
         //_FuncType 传值, 自动把函数转成指向函数的指针
         void * ppf = lua_newuserdata(pLua, sizeof(pf));
@@ -73,7 +73,7 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 
     //这是公共的注册函数
     template<class _FuncType>
-    int	MainLuaCFunctionCall(lua_State * pLua)
+    int MainLuaCFunctionCall(lua_State * pLua)
     {
         void * ppf = lua_touserdata(pLua, lua_upvalueindex(1));
         assert(*(_FuncType*)ppf);
