@@ -8,7 +8,7 @@ static const char * LUA_CHUNK_FUNC_NAME = "COMPILED_LUA_FUNC";
 //-------------------------------------------------------------
 
 lua_state_wrapper::lua_state_wrapper()
-	: m_pLuaState(nullptr)
+    : m_pLuaState(nullptr)
 {
 }
 
@@ -39,14 +39,14 @@ bool lua_state_wrapper::create()
     assert(!m_pLuaState);
     if (!m_pLuaState)
     {
-        m_pLuaState = luaL_newstate();
+        m_pLuaState = ::luaL_newstate();
         assert(m_pLuaState);
         if (m_pLuaState)
         {
-            luaL_openlibs(m_pLuaState);
+            ::luaL_openlibs(m_pLuaState);
             return true;
         }
-        lua_close(m_pLuaState);
+        ::lua_close(m_pLuaState);
         m_pLuaState = nullptr;
         return false;
     }
@@ -57,7 +57,7 @@ void lua_state_wrapper::close()
 {
     if (m_pLuaState)
     {
-        lua_close(m_pLuaState);
+        ::lua_close(m_pLuaState);
         m_pLuaState = nullptr;
     }
 }
@@ -77,12 +77,12 @@ lua_State * lua_state_wrapper::detach()
 
 lua_State* lua_state_wrapper::get_raw_state()
 {
-	return m_pLuaState;
+    return m_pLuaState;
 }
 
 lua_state_wrapper::operator lua_State*()
 {
-	return m_pLuaState;
+    return m_pLuaState;
 }
 
 void * lua_state_wrapper::alloc_user_data(const char * pName, size_t size)
@@ -91,8 +91,8 @@ void * lua_state_wrapper::alloc_user_data(const char * pName, size_t size)
     if (m_pLuaState && pName)
     {
         lua_stack_guard_checker check(m_pLuaState);
-        void* p = lua_newuserdata(m_pLuaState, size);
-        lua_setglobal(m_pLuaState, pName);
+        void* p = ::lua_newuserdata(m_pLuaState, size);
+        ::lua_setglobal(m_pLuaState, pName);
         return p;
     }
     return nullptr;
@@ -103,11 +103,11 @@ bool lua_state_wrapper::do_lua_file(const char * pFileName)
     assert(m_pLuaState);
     auto err = LUA_ERRERR;
     if (pFileName && m_pLuaState)
-	{
-		err = luaL_dofile(m_pLuaState, pFileName);
-	}
+    {
+        err = luaL_dofile(m_pLuaState, pFileName);
+    }
     assert(err == LUA_OK);
-	return (err == LUA_OK);
+    return (err == LUA_OK);
 }
 
 bool lua_state_wrapper::do_lua_file(const wchar_t * pFileName)
@@ -134,9 +134,9 @@ bool lua_state_wrapper::do_lua_string(const char * pString)
     assert(m_pLuaState);
     auto err = LUA_ERRERR;
     if (pString && m_pLuaState)
-	{
-		err = luaL_dostring(m_pLuaState, pString);
-	}
+    {
+        err = luaL_dostring(m_pLuaState, pString);
+    }
     assert(err == LUA_OK);
     return (err == LUA_OK);
 }
@@ -170,7 +170,7 @@ bool lua_state_wrapper::load_lua_file(const char * pFileName)
         if (do_lua_string(luaStr.c_str()))
         {
             lua_stack_guard stateGuard(m_pLuaState);
-            if (LUA_TFUNCTION == lua_getglobal(m_pLuaState, LUA_CHUNK_FUNC_NAME))
+            if (LUA_TFUNCTION == ::lua_getglobal(m_pLuaState, LUA_CHUNK_FUNC_NAME))
             {
                 err = LUA_OK;
             }
@@ -209,7 +209,7 @@ bool lua_state_wrapper::load_lua_string(const char * pString)
         if (do_lua_string(luaStr.c_str()))
         {
             lua_stack_guard stateGuard(m_pLuaState);
-            if (LUA_TFUNCTION == lua_getglobal(m_pLuaState, LUA_CHUNK_FUNC_NAME))
+            if (LUA_TFUNCTION == ::lua_getglobal(m_pLuaState, LUA_CHUNK_FUNC_NAME))
             {
                 err = LUA_OK;
             }
@@ -244,9 +244,9 @@ bool lua_state_wrapper::run()
     if (m_pLuaState)
     {
         lua_stack_guard stateGuard(m_pLuaState);
-        if (LUA_TFUNCTION == lua_getglobal(m_pLuaState, LUA_CHUNK_FUNC_NAME))
+        if (LUA_TFUNCTION == ::lua_getglobal(m_pLuaState, LUA_CHUNK_FUNC_NAME))
         {
-            return (0 == lua_pcall(m_pLuaState, 0, LUA_MULTRET, 0));
+            return (0 == ::lua_pcall(m_pLuaState, 0, LUA_MULTRET, 0));
         }
     }
     return false;
@@ -255,18 +255,18 @@ bool lua_state_wrapper::run()
 std::string lua_state_wrapper::get_error_msg()
 {
     if (!m_pLuaState)
-	{
-		return "未成功创建lua_State";
-	}
-	size_t nLenth = 0;
-	const char *p = lua_tolstring(m_pLuaState, -1, &nLenth);
-	if (p && nLenth > 0)
-	{
-		std::string err(p, nLenth);
-		lua_pop(m_pLuaState, 1);
-		return err;
-	}
-	return "";
+    {
+        return "未成功创建lua_State";
+    }
+    size_t nLenth = 0;
+    const char *p = ::lua_tolstring(m_pLuaState, -1, &nLenth);
+    if (p && nLenth > 0)
+    {
+        std::string err(p, nLenth);
+        ::lua_pop(m_pLuaState, 1);
+        return err;
+    }
+    return "";
 }
 
 int lua_state_wrapper::get_stack_count()
@@ -274,7 +274,7 @@ int lua_state_wrapper::get_stack_count()
     assert(m_pLuaState);
     if (m_pLuaState)
     {
-        return lua_gettop(m_pLuaState);
+        return ::lua_gettop(m_pLuaState);
     }
     return 0;
 }
@@ -284,7 +284,7 @@ size_t lua_state_wrapper::get_size(int index)
     assert(m_pLuaState);
     if (m_pLuaState)
     {
-        return lua_rawlen(m_pLuaState, index);
+        return ::lua_rawlen(m_pLuaState, index);
     }
     return 0;
 }

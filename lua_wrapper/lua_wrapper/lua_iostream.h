@@ -92,7 +92,7 @@ public:
     template<class T>
     lua_ostream & operator << (T * value)
     {
-        lua_pushlightuserdata(m_pLua, value);
+        ::lua_pushlightuserdata(m_pLua, value);
         check_table_push();
         return *this;
     }
@@ -183,10 +183,10 @@ public:
     {
         if (!m_isEof)
         {
-            m_isOK = (lua_type(m_pLua, get_value_index()) == LUA_TSTRING);
+            m_isOK = (::lua_type(m_pLua, get_value_index()) == LUA_TSTRING);
             if (m_isOK)
             {
-                value = lua_tostring(m_pLua, get_value_index());
+                value = ::lua_tostring(m_pLua, get_value_index());
             }
             next();
         }
@@ -225,10 +225,10 @@ public:
     {
         if (!m_isEof)
         {
-            m_isOK = (lua_type(m_pLua, get_value_index()) == LUA_TLIGHTUSERDATA);
+            m_isOK = (::lua_type(m_pLua, get_value_index()) == LUA_TLIGHTUSERDATA);
             if (m_isOK)
             {
-                value = (T*)lua_touserdata(m_pLua, get_value_index());
+                value = (T*)::lua_touserdata(m_pLua, get_value_index());
             }
             next();
         }
@@ -286,11 +286,11 @@ struct lua_io_dispatcher
     */
     static int to_lua(lua_State * pL, const T & value)
     {
-        auto n = lua_gettop(pL);
+        auto n = ::lua_gettop(pL);
         lua_ostream os(pL);
         os << value;
-        assert(lua_gettop(pL) >= n);
-        return lua_gettop(pL) - n;
+        assert(::lua_gettop(pL) >= n);
+        return ::lua_gettop(pL) - n;
     }
 
     /** 从lua栈上读取数据
@@ -345,9 +345,9 @@ struct lua_io_dispatcher<const char*, false>
     static const char* from_lua(lua_State * pL, int index, const char * defaultValue = "")
     {
         lua_stack_guard_checker checker(pL);
-        if (lua_type(pL, index) == LUA_TSTRING)
+        if (::lua_type(pL, index) == LUA_TSTRING)
         {
-            return lua_tostring(pL, index);
+            return ::lua_tostring(pL, index);
         }
         return defaultValue;
     }

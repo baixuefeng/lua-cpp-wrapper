@@ -1,26 +1,32 @@
 ﻿
 - [**lua_wrapper**](#luawrapper)
-- [**技术细节:**](#技术细节)
-    - [**一、Lua背景知识：**](#一、lua背景知识：)
-        - [**1.1 Lua如何调用C**](#11-lua如何调用c)
-        - [**1.2 给C回调函数设置userdata**](#12-给c回调函数设置userdata)
-    - [**二、实现C++调用转接到lua的基本方法：**](#二、实现c调用转接到lua的基本方法：)
-    - [**三、需要解决的问题**](#三、需要解决的问题)
-        - [**3.1 不想写那么多lua_CFunction，只写一个怎么样？**](#31-不想写那么多luacfunction，只写一个怎么样？)
-        - [**3.2 函数指针的类型怎么办？**](#32-函数指针的类型怎么办？)
-        - [**3.3 解析函数的参数信息、返回值信息**](#33-解析函数的参数信息、返回值信息)
-        - [**3.4 区别调用**](#34-区别调用)
-        - [**3.5 怎样传参？怎样返回值？**](#35-怎样传参？怎样返回值？)
-        - [**3.6 最后要解决的问题**](#36-最后要解决的问题)
-        - [**3.7 更进一步**](#37-更进一步)
+- [**技术细节:**](#%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82)
+    - [**一、Lua背景知识：**](#%E4%B8%80%E3%80%81lua%E8%83%8C%E6%99%AF%E7%9F%A5%E8%AF%86%EF%BC%9A)
+        - [**1.1 Lua如何调用C**](#11-lua%E5%A6%82%E4%BD%95%E8%B0%83%E7%94%A8c)
+        - [**1.2 给C回调函数设置userdata**](#12-%E7%BB%99c%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E8%AE%BE%E7%BD%AEuserdata)
+    - [**二、实现C++调用转接到lua的基本方法：**](#%E4%BA%8C%E3%80%81%E5%AE%9E%E7%8E%B0c%E8%B0%83%E7%94%A8%E8%BD%AC%E6%8E%A5%E5%88%B0lua%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%96%B9%E6%B3%95%EF%BC%9A)
+    - [**三、需要解决的问题**](#%E4%B8%89%E3%80%81%E9%9C%80%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98)
+        - [**3.1 不想写那么多lua_CFunction，只写一个怎么样？**](#31-%E4%B8%8D%E6%83%B3%E5%86%99%E9%82%A3%E4%B9%88%E5%A4%9Aluacfunction%EF%BC%8C%E5%8F%AA%E5%86%99%E4%B8%80%E4%B8%AA%E6%80%8E%E4%B9%88%E6%A0%B7%EF%BC%9F)
+        - [**3.2 函数指针的类型怎么办？**](#32-%E5%87%BD%E6%95%B0%E6%8C%87%E9%92%88%E7%9A%84%E7%B1%BB%E5%9E%8B%E6%80%8E%E4%B9%88%E5%8A%9E%EF%BC%9F)
+        - [**3.3 解析函数的参数信息、返回值信息**](#33-%E8%A7%A3%E6%9E%90%E5%87%BD%E6%95%B0%E7%9A%84%E5%8F%82%E6%95%B0%E4%BF%A1%E6%81%AF%E3%80%81%E8%BF%94%E5%9B%9E%E5%80%BC%E4%BF%A1%E6%81%AF)
+        - [**3.4 区别调用**](#34-%E5%8C%BA%E5%88%AB%E8%B0%83%E7%94%A8)
+        - [**3.5 怎样传参？怎样返回值？**](#35-%E6%80%8E%E6%A0%B7%E4%BC%A0%E5%8F%82%EF%BC%9F%E6%80%8E%E6%A0%B7%E8%BF%94%E5%9B%9E%E5%80%BC%EF%BC%9F)
+        - [**3.6 最后要解决的问题**](#36-%E6%9C%80%E5%90%8E%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98)
+        - [**3.7 更进一步**](#37-%E6%9B%B4%E8%BF%9B%E4%B8%80%E6%AD%A5)
 
 # **lua_wrapper**
 
-一个用C++11封装lua的库。支持任意数量参数，调用类型支持函数，成员函数，成员变量、函数对象、Lambda表达式。数据类型支持所有枚举，支持const wchar_t*，并且可以自由扩展自定义类型。
+一个用C++11封装lua的库。
+1. 支持任意数量参数；
+1. 调用类型支持函数，成员函数，成员变量、**函数对象、Lambda表达式**。
+1. 数据类型支持所有枚举，支持const wchar_t*，并且可以**自由扩展自定义类型**。
 
 # **技术细节:**
 
-为了在项目中对接lua，查找了一些开源库，但都一些不尽如人意的地方：比如，支持的函数参数数量有限，一旦真遇到超过10参数时，就不支持了；不支持枚举，不支持自定义类型，不方便扩展等，因此参照C++11最新的模板技术，自行封装一个改造版的lua库。解决了上面那些问题。
+为了在项目中对接lua，查找了一些开源库，但都一些不尽如人意的地方：比如，
+1. 支持的函数参数数量有限，一旦真遇到超过10参数时，就不支持了；
+1. 不支持枚举，不支持自定义类型，不方便扩展等;   
+因此参照C++11最新的模板技术，自行封装一个改造版的lua库。解决了上面那些问题。
 
 ## **一、Lua背景知识：**
 ### **1.1 Lua如何调用C**
@@ -164,31 +170,31 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 
     //模板特化, 函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 成员函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 成员函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, ArgIndex<index...> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 成员变量指针
     template<class _CallableType>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, ArgIndex<> >
+    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, IntegerSequence<> >
     {
     };
 
-这里注意模板特化中的常量参数 `size_t ... index`，传类型参数`ArgIndex<…>`，但是模板的常量参数却不是`ArgIndex`，这样做的目的是剥离`ArgIndex`，只保留最有用的整数序列。
+这里注意模板特化中的常量参数 `size_t ... index`，传类型参数`IntegerSequence<…>`，但是模板的常量参数却不是`IntegerSequence`，这样做的目的是剥离`IntegerSequence`，只保留最有用的整数序列。
 
 ### **3.5 怎样传参？怎样返回值？**
 

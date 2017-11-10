@@ -22,7 +22,7 @@ public:
     explicit lua_stack_guard_checker(lua_State * pL)
 #ifndef NDEBUG
         : m_pL(pL)
-        , m_nCount(lua_gettop(pL))
+        , m_nCount(::lua_gettop(pL))
 #endif
     {
         (void)pL;
@@ -30,7 +30,7 @@ public:
     ~lua_stack_guard_checker()
     {
 #ifndef NDEBUG
-        assert(m_nCount == lua_gettop(m_pL));
+        assert(m_nCount == ::lua_gettop(m_pL));
 #endif
     }
 
@@ -47,17 +47,17 @@ class lua_stack_guard
 public:
     explicit lua_stack_guard(lua_State * pL)
         : m_pL(pL)
-        , m_nCount(lua_gettop(pL))
+        , m_nCount(::lua_gettop(pL))
     {
     }
 
     ~lua_stack_guard()
     {
-        int nCount = lua_gettop(m_pL);
+        int nCount = ::lua_gettop(m_pL);
         assert(nCount >= m_nCount);
         if (nCount > m_nCount)
         {
-            lua_pop(m_pL, (nCount - m_nCount));
+            ::lua_pop(m_pL, (nCount - m_nCount));
         }
     }
 private:

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 /* 
-version: 0.2
+version: 1.0
 */
 
 #include <cstdint>
@@ -195,7 +195,7 @@ namespace Internal
     int MainLuaCFunctionCall(lua_State * pLua)
     {
         //upvalue中第一个值固定为真实执行的调用值
-        void * ppf = lua_touserdata(pLua, lua_upvalueindex(1));
+        void * ppf = ::lua_touserdata(pLua, lua_upvalueindex(1));
         assert(ppf);
         using _Call_Helper = CallableTypeHelper<_CallType>;
         CheckCFuncArgValid<typename _Call_Helper::arg_tuple_t> checkParam;
@@ -227,7 +227,7 @@ namespace Internal
     template<class T>
     int FunctionObjectGcHelper(lua_State * pLua)
     {
-        T * p = (T*)lua_touserdata(pLua, 1);
+        T * p = (T*)::lua_touserdata(pLua, 1);
         p->~T();
         return 0;
     }
@@ -240,7 +240,7 @@ namespace Internal
         static void PushImpl(lua_State * pLua, _CallType && pf)
         {
             using _Call_t = std::decay_t<_CallType>;
-            _Call_t * ppf = (_Call_t *)lua_newuserdata(pLua, sizeof(_Call_t));
+            _Call_t * ppf = (_Call_t *)::lua_newuserdata(pLua, sizeof(_Call_t));
             assert(ppf);
             ::new (ppf)_Call_t(std::forward<_CallType>(pf));
             ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t, true>, 1);
@@ -256,19 +256,19 @@ namespace Internal
         {
             using _Call_t = std::decay_t<_CallType>;
             using _FuncObj_Store_t = std::shared_ptr<void>;
-            _FuncObj_Store_t * pObj = (_FuncObj_Store_t *)lua_newuserdata(pLua, sizeof(_FuncObj_Store_t));
+            _FuncObj_Store_t * pObj = (_FuncObj_Store_t *)::lua_newuserdata(pLua, sizeof(_FuncObj_Store_t));
             ::new (pObj)_FuncObj_Store_t();
             *pObj = std::make_shared<_Call_t>(std::forward<_CallType>(pf));
-            if (luaL_newmetatable(pLua, "{BEB170D0-0C27-4AE7-9891-6487B608C7C5}") > 0)
+            if (::luaL_newmetatable(pLua, "{BEB170D0-0C27-4AE7-9891-6487B608C7C5}") > 0)
             {
                 //创建元表进行垃圾回收,一个元表只有一个垃圾回收实现,但元表中关联的userdata有多种,
                 //因此使用shared_ptr<void>封装,进行统一析构
-                lua_pushcfunction(pLua, FunctionObjectGcHelper<_FuncObj_Store_t>);
-                lua_setfield(pLua, -2, "__gc");
+                ::lua_pushcfunction(pLua, FunctionObjectGcHelper<_FuncObj_Store_t>);
+                ::lua_setfield(pLua, -2, "__gc");
             }
             //关联userdata到垃圾回收元表中
-            lua_setmetatable(pLua, -2);
-            assert(LUA_TUSERDATA == lua_type(pLua, -1));
+            ::lua_setmetatable(pLua, -2);
+            assert(LUA_TUSERDATA == ::lua_type(pLua, -1));
             ::lua_pushcclosure(pLua, MainLuaCFunctionCall<_Call_t, false>, 1);
         }
     };
@@ -352,8 +352,8 @@ public:
     void attach(lua_State * pState);
     lua_State * detach();
 
-	lua_State* get_raw_state();
-	operator lua_State*();
+    lua_State* get_raw_state();
+    operator lua_State*();
 
 /* 一般的操作流程：
 先设置变量、C函数等，再执行脚本，最后获取变量
@@ -371,7 +371,7 @@ public:
         {
             lua_stack_guard_checker check(m_pLuaState);
             lua_io_dispatcher<std::decay_t<T>>::to_lua(m_pLuaState, value);
-            lua_setglobal(m_pLuaState, pName);
+            ::lua_setglobal(m_pLuaState, pName);
         }
     }
 
@@ -388,7 +388,7 @@ public:
         {
             lua_stack_guard_checker check(m_pLuaState);
             push_cpp_callable_to_lua(m_pLuaState, std::forward<T>(pf));
-            lua_setglobal(m_pLuaState, pFuncName);
+            ::lua_setglobal(m_pLuaState, pFuncName);
         }
     }
 
@@ -431,7 +431,7 @@ public:
         if (m_pLuaState && pName)
         {
             lua_stack_guard guard(m_pLuaState);
-            lua_getglobal(m_pLuaState, pName);
+            ::lua_getglobal(m_pLuaState, pName);
             return lua_io_dispatcher<std::decay_t<T>>::from_lua(m_pLuaState, -1, defaultValue);
         }
         return defaultValue;
