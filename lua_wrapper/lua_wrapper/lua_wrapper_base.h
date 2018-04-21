@@ -9,7 +9,9 @@
 如VC中文环境就不使用UTF8,并且设置 std::locale::global(std::locale(""));
 而g++中要使用UTF8.
 */
-//#define LUA_CODE_UTF8
+#ifndef _MSC_VER
+#define LUA_CODE_UTF8
+#endif // !_MSC_VER
 
 SHARELIB_BEGIN_NAMESPACE
 

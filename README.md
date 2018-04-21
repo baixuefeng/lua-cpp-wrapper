@@ -1,6 +1,14 @@
 ﻿
+# **lua_wrapper**
+
+一个用C++11封装lua的库。
+
+1. 支持任意数量参数；
+1. 调用类型支持函数，成员函数，成员变量、**函数对象、Lambda表达式**。
+1. 数据类型支持所有枚举，支持const wchar_t*，并且可以**自由扩展自定义类型**。
+
 - [**lua_wrapper**](#luawrapper)
-- [**技术细节:**](#%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82)
+    - [**技术细节:**](#%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82)
     - [**一、Lua背景知识：**](#%E4%B8%80%E3%80%81lua%E8%83%8C%E6%99%AF%E7%9F%A5%E8%AF%86%EF%BC%9A)
         - [**1.1 Lua如何调用C**](#11-lua%E5%A6%82%E4%BD%95%E8%B0%83%E7%94%A8c)
         - [**1.2 给C回调函数设置userdata**](#12-%E7%BB%99c%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E8%AE%BE%E7%BD%AEuserdata)
@@ -14,21 +22,17 @@
         - [**3.6 最后要解决的问题**](#36-%E6%9C%80%E5%90%8E%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98)
         - [**3.7 更进一步**](#37-%E6%9B%B4%E8%BF%9B%E4%B8%80%E6%AD%A5)
 
-# **lua_wrapper**
-
-一个用C++11封装lua的库。
-1. 支持任意数量参数；
-1. 调用类型支持函数，成员函数，成员变量、**函数对象、Lambda表达式**。
-1. 数据类型支持所有枚举，支持const wchar_t*，并且可以**自由扩展自定义类型**。
-
-# **技术细节:**
+## **技术细节:**
 
 为了在项目中对接lua，查找了一些开源库，但都一些不尽如人意的地方：比如，
+
 1. 支持的函数参数数量有限，一旦真遇到超过10参数时，就不支持了；
-1. 不支持枚举，不支持自定义类型，不方便扩展等;   
+1. 不支持枚举，不支持自定义类型，不方便扩展等;
+
 因此参照C++11最新的模板技术，自行封装一个改造版的lua库。解决了上面那些问题。
 
 ## **一、Lua背景知识：**
+
 ### **1.1 Lua如何调用C**
 
     /*
@@ -41,7 +45,7 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 ### **1.2 给C回调函数设置userdata**
 
 要注册C函数到lua里面，最终会调用的一个函数是
-    
+
     LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n);
 
 第一、二个参数容易理解，重点是第三个参数，表示有多少个值被关联到这个注册的函数中。做法是，先push数据到`lus_State*`的栈上，而后调用该函数，把数据的个数传给第三个参数。
@@ -57,11 +61,13 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 我们希望的目标是，能够有一种方法，把C++调用与lua自动关联起来，而后所有的参数传递，返回值等都自动处理好。
 
 ## **三、需要解决的问题**
+
 ### **3.1 不想写那么多lua_CFunction，只写一个怎么样？**
 
 一个lua_CFunction要对应多种调用，必须有一种机制能够映射到不同的函数，结合二，可以这样实现：把要注册的C++函数指针作为userdata传给公共的注册函数，回调时取出函数指针调用之。
 
 ### **3.2 函数指针的类型怎么办？**
+
 借用C++的模板函数特性，把公共的注册函数实现为模板，注册时把函数指针的类型显式实例化注册函数，这样回调过来的时候，可以把函数指针的类型恢复起来。 
 下面是代码示例：
 
@@ -118,7 +124,7 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
     using result_t = …; //返回值类型
     using arg_tuple_t = std::tuple<…>; //参数打包而成的tuple类型
     using arg_index_t = typename MakeSequence<…>::type;//参数序列号
-    static const CallableIdType callable_id = …; //调用类型的常量值
+    static const CallType call_type = …; //调用类型的常量值
 
 这里的`MakeSequence`作用是把可变参数的模板类型转化为整数序列，实现如下：
 
@@ -165,32 +171,32 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
     @Tparam[in] _CallableType: CallableTypeHelper类类型
     @Tparam[in] _IndexType: 参数序列号
     */
-    template<CallableIdType callId, bool returnVoid, class _CallableType, class _IndexType>
+    template<CallType callId, bool returnVoid, class _CallableType, class _IndexType>
     struct luaCFunctionDispatcher;
 
     //模板特化, 函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 成员函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 成员函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
     };
     //模板特化, 成员变量指针
     template<class _CallableType>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, IntegerSequence<> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_MEMBER_DATA, false, _CallableType, IntegerSequence<> >
     {
     };
 
@@ -203,7 +209,7 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 因此需要制定一个规则，lua调用C++时，必须按C++函数的参数列表，一一对应传参。这样，回调的`lua_State*`中，栈索引`1, 2, …`恰好对应C++函数的参数整数序列。假设有一个辅助函数`from_lua`可以根据栈索引，从lua中读取数据转成C++类型的值，那么就可以按下面的方式调用C++函数：
 
     pf(from_lua(pLua, index + 1)...);
-    
+
 `pf`代表C++函数指针，另外C++函数的参数整数序列是从0开始，而lua的栈索引是从1开始，因此要把序列号加1.
 
 再假设有一个辅助函数to_lua，可以把C++数据写入到lua中，那么整个的C++调用，并且把C++返回值写回lua就完全可以实现了：
@@ -214,11 +220,11 @@ lua可以调用的C函数原型如上，lua库会把参数等信息存入`lua_St
 
 至此，整个的注册、回调、转发调用C++，返回值回传lua的流程已经清晰：
 
-* (1) push_cpp_callable_to_lua，将C++调用注册到lua，C++调用指针通过lua的upvalue机制传入，类型通过模板显式实例化实现，所有的C++调用最终归结到一个总的lua回调：MainLuaCFunctionCall
+- (1) push_cpp_callable_to_lua，将C++调用注册到lua，C++调用指针通过lua的upvalue机制传入，类型通过模板显式实例化实现，所有的C++调用最终归结到一个总的lua回调：MainLuaCFunctionCall
 
-* (2) lua回调C++时，首先进入MainLuaCFunctionCall，而后从upvalue中取出C++调用指针，并且恢复类型，借肋模板特化解析类型，而后根据不同情况区别调用C++指针；
+- (2) lua回调C++时，首先进入MainLuaCFunctionCall，而后从upvalue中取出C++调用指针，并且恢复类型，借肋模板特化解析类型，而后根据不同情况区别调用C++指针；
 
-* (3) to_lua(pf(from_lua(pLua, index + 1)...)); 转化lua数据，传参，调用C++函数，返回值回写lua，完成。
+- (3) to_lua(pf(from_lua(pLua, index + 1)...)); 转化lua数据，传参，调用C++函数，返回值回写lua，完成。
 
 ### **3.6 最后要解决的问题**
 
@@ -230,7 +236,7 @@ Lua要转成C++，需要知道C++类型；同样，C++转lua也需要根据类�
     using result_t = …; //返回值类型
     using arg_tuple_t = std::tuple<…>; //参数打包而成的tuple类型
     using arg_index_t = typename MakeArgIndex<…>::type;//参数序列号
-    static const CallableIdType callable_id = …; //调用类型的常量值
+    static const CallType call_type = …; //调用类型的常量值
 
 其中，`result_t`就是返回值类型，于是`to_lua`可以解决了；`arg_tuple_t`是`tuple`类型，结合整数序列，可以用`std::tuple_element`获取某一个参数的类型，于是`from_lua`也可解决了。不同的C++类型，lua与之转换的做法不相同，要使用一个函数解决这些类型的转换，自然而然地想到，再次使用模板特化，假设该类模板取名为`lua_io_dispatcher`，那么C++函数调用就可以这样实现：
 
@@ -245,9 +251,9 @@ Lua要转成C++，需要知道C++类型；同样，C++转lua也需要根据类�
 
 到上面，是目前包括luaplus等开源库的普遍做法，实现上虽千差万别，但基本原理大同小异。不过实际应用的时候，还会遇到问题，就是第6步中，用模板特化实现类型转化这里，普遍的做法就是从`int`，`unsigned int`，`long`，`unsigned long`，`double`，`float`，`…`等基本类型通通特化一遍，看起来支持得也挺全面了，但是，如果遇到用户自定义类型怎么办？C++的函数中使用自定义类型的情况非常普遍，别的不说，单说标准库中，当这些基本类型与`vector`结合时，需要特化的版本数量就得再翻一倍，`list`呢，再翻一倍，`dequeu`，`map`，`set`，`…`，因此，单单通过模板特化是根本无法满足需要的，无论你预先特化多少个版本，都是不够用的。必须让用户能够很方便的进行自由扩展。但模板特化这种做法，对于自由扩展来说，严重不友好。
 
-* (1) 使用模板的地方必须看到所有的特化版本，那些看不到的版本不能生效；
+- (1) 使用模板的地方必须看到所有的特化版本，那些看不到的版本不能生效；
 
-* (2) 所有特化的版本必须和主声明在同一个命名空间中；
+- (2) 所有特化的版本必须和主声明在同一个命名空间中；
 
 第(1)条所导致的后果就是用户为了实现扩展必须把各种头文件都加到该模板实现里，第(2)条所导致的后果就是用户为了实现扩展得修改这个lua封装库。两条都是不可接受的。
 

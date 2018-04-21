@@ -50,15 +50,15 @@ namespace Internal
     @Tparam[in] _CallableType: CallableTypeHelper类类型
     @Tparam[in] _IndexType: 参数序列号
     */
-    template<CallableIdType callId, bool returnVoid, class _CallableType, class _IndexType>
+    template<CallType callId, bool returnVoid, class _CallableType, class _IndexType>
     struct luaCFunctionDispatcher;
 
     //模板特化, 函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pfn)
+        static int Execute(lua_State * pLua, _PfType pfn)
         {
             (void)pLua;//消除0参0返回值时的警告
             pfn(lua_io_dispatcher<
@@ -70,10 +70,10 @@ namespace Internal
 
     //模板特化, 函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pfn)
+        static int Execute(lua_State * pLua, _PfType pfn)
         {
             using result_type = std::decay_t<typename _CallableType::result_t>;
             return lua_io_dispatcher<result_type>::to_lua(
@@ -87,10 +87,10 @@ namespace Internal
 
     //模板特化, 成员函数指针, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_MEMBER_FUNCTION, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pmf)
+        static int Execute(lua_State * pLua, _PfType pmf)
         {
             using class_type = std::decay_t<typename _CallableType::class_t>;
             class_type * pThis = lua_io_dispatcher<class_type*>::from_lua(pLua, 1);
@@ -107,10 +107,10 @@ namespace Internal
 
     //模板特化, 成员函数指针, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_MEMBER_FUNCTION, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pmf)
+        static int Execute(lua_State * pLua, _PfType pmf)
         {
             using result_type = std::decay_t<typename _CallableType::result_t>;
             using class_type = std::decay_t<typename _CallableType::class_t>;
@@ -134,10 +134,10 @@ namespace Internal
 
     //模板特化, 成员变量指针
     template<class _CallableType>
-    struct luaCFunctionDispatcher<CallableIdType::POINTER_TO_MEMBER_DATA, false, _CallableType, IntegerSequence<> >
+    struct luaCFunctionDispatcher<CallType::POINTER_TO_MEMBER_DATA, false, _CallableType, IntegerSequence<> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType pmd)
+        static int Execute(lua_State * pLua, _PfType pmd)
         {
             using result_type = std::decay_t<typename _CallableType::result_t>;
             using class_type = std::decay_t<typename _CallableType::class_t>;
@@ -159,10 +159,10 @@ namespace Internal
 
     //模板特化, 函数对象, 返回void
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, true, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::FUNCTION_OBJECT, true, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType && fnObj)
+        static int Execute(lua_State * pLua, _PfType && fnObj)
         {
             fnObj(lua_io_dispatcher<
                 std::decay_t<typename std::tuple_element<index, typename _CallableType::arg_tuple_t>::type >
@@ -173,10 +173,10 @@ namespace Internal
 
     //模板特化, 函数对象, 有返回值
     template<class _CallableType, size_t ... index>
-    struct luaCFunctionDispatcher<CallableIdType::FUNCTION_OBJECT, false, _CallableType, IntegerSequence<index...> >
+    struct luaCFunctionDispatcher<CallType::FUNCTION_OBJECT, false, _CallableType, IntegerSequence<index...> >
     {
         template<class _PfType>
-        static int Apply(lua_State * pLua, _PfType && fnObj)
+        static int Execute(lua_State * pLua, _PfType && fnObj)
         {
             using result_type = std::decay_t<typename _CallableType::result_t>;
             return lua_io_dispatcher<result_type>::to_lua(
@@ -204,20 +204,20 @@ namespace Internal
         if (bTrivial)
         {
             return luaCFunctionDispatcher<
-                _Call_Helper::callable_id,
+                _Call_Helper::call_type,
                 std::is_void<typename _Call_Helper::result_t>::value,
                 _Call_Helper,
-                typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)ppf);
+                typename _Call_Helper::arg_index_t>::Execute(pLua, *(_CallType*)ppf);
         }
         else
         {
             using _FuncObj_Store_t = std::shared_ptr<void>;
             _FuncObj_Store_t * pSpObj = (_FuncObj_Store_t*)ppf;
             return luaCFunctionDispatcher<
-                _Call_Helper::callable_id,
+                _Call_Helper::call_type,
                 std::is_void<typename _Call_Helper::result_t>::value,
                 _Call_Helper,
-                typename _Call_Helper::arg_index_t>::Apply(pLua, *(_CallType*)(pSpObj->get()));
+                typename _Call_Helper::arg_index_t>::Execute(pLua, *(_CallType*)(pSpObj->get()));
         }
     }
 

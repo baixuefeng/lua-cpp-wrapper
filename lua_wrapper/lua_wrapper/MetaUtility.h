@@ -140,66 +140,42 @@ public: \
 
 namespace Internal
 {
-// 下面的宏用来定义函数调用类型, 是从STL源码中复制下来的
 
-#ifdef _M_IX86
+// 空，用来给宏传递空参数
+#define NON_PARAM
 
-#ifdef _M_CEE
-#ifndef NON_MEMBER_CALL_MACRO
-#define NON_MEMBER_CALL_MACRO(FUNC, CONST_OPT) \
-	FUNC(__cdecl, CONST_OPT) \
-	FUNC(__stdcall, CONST_OPT) \
-	FUNC(__clrcall, CONST_OPT)
-#endif // !NON_MEMBER_CALL_MACRO
-#ifndef MEMBER_CALL_MACRO
-#define MEMBER_CALL_MACRO(FUNC, CONST_OPT, CV_OPT) \
-	FUNC(__thiscall, CONST_OPT, CV_OPT) \
-	FUNC(__cdecl, CONST_OPT, CV_OPT) \
-	FUNC(__stdcall, CONST_OPT, CV_OPT) \
-	FUNC(__clrcall, CONST_OPT, CV_OPT)
-#endif // !MEMBER_CALL_MACRO
+// 下面的宏用来定义函数调用类型
 
-#else /* _M_CEE */
-#ifndef NON_MEMBER_CALL_MACRO
-#define NON_MEMBER_CALL_MACRO(FUNC, CONST_OPT) \
-	FUNC(__cdecl, CONST_OPT) \
-	FUNC(__stdcall, CONST_OPT) \
-	FUNC(__fastcall, CONST_OPT)
-#endif // !NON_MEMBER_CALL_MACRO
-#ifndef MEMBER_CALL_MACRO
-#define MEMBER_CALL_MACRO(FUNC, CONST_OPT, CV_OPT) \
-	FUNC(__thiscall, CONST_OPT, CV_OPT) \
-	FUNC(__cdecl, CONST_OPT, CV_OPT) \
-	FUNC(__stdcall, CONST_OPT, CV_OPT) \
-	FUNC(__fastcall, CONST_OPT, CV_OPT)
-#endif // !MEMBER_CALL_MACRO
-#endif /* _M_CEE */
+#if defined(_WIN32) && defined(_M_IX86) 
 
-#else /* _M_IX86 */
+#ifndef     NON_MEMBER_CALL_MACRO
+#define     NON_MEMBER_CALL_MACRO(FUNC) \
+	        FUNC(__cdecl) \
+	        FUNC(__stdcall) \
+	        FUNC(__fastcall)
+#endif      // !NON_MEMBER_CALL_MACRO
 
-#ifdef _M_CEE
-#ifndef NON_MEMBER_CALL_MACRO
-#define NON_MEMBER_CALL_MACRO(FUNC, CONST_OPT) \
-	FUNC(__cdecl, CONST_OPT) \
-	FUNC(__clrcall, CONST_OPT)
-#endif // !NON_MEMBER_CALL_MACRO
-#ifndef MEMBER_CALL_MACRO
-#define MEMBER_CALL_MACRO(FUNC, CONST_OPT, CV_OPT) \
-	FUNC(__cdecl, CONST_OPT, CV_OPT) \
-	FUNC(__clrcall, CONST_OPT, CV_OPT)
-#endif // !MEMBER_CALL_MACRO
+#ifndef     MEMBER_CALL_MACRO
+#define     MEMBER_CALL_MACRO(FUNC, CV_OPT) \
+	        FUNC(__thiscall, CV_OPT) \
+	        FUNC(__cdecl, CV_OPT) \
+	        FUNC(__stdcall, CV_OPT) \
+	        FUNC(__fastcall, CV_OPT)
+#endif      // !MEMBER_CALL_MACRO
 
-#else /* _M_CEE */
-#ifndef NON_MEMBER_CALL_MACRO
-#define NON_MEMBER_CALL_MACRO(FUNC, CONST_OPT) \
-	FUNC(__cdecl, CONST_OPT)
-#endif // !NON_MEMBER_CALL_MACRO
-#ifndef MEMBER_CALL_MACRO
-#define MEMBER_CALL_MACRO(FUNC, CONST_OPT, CV_OPT) \
-	FUNC(__cdecl, CONST_OPT, CV_OPT)
-#endif // !MEMBER_CALL_MACRO
-#endif /* _M_CEE */
-#endif /* _M_IX86 */
+#else 
+
+#ifndef     NON_MEMBER_CALL_MACRO
+#define     NON_MEMBER_CALL_MACRO(FUNC) \
+	        FUNC(NON_PARAM)
+#endif      // !NON_MEMBER_CALL_MACRO
+
+#ifndef     MEMBER_CALL_MACRO
+#define     MEMBER_CALL_MACRO(FUNC, CV_OPT) \
+	        FUNC(NON_PARAM, CV_OPT)
+#endif      // !MEMBER_CALL_MACRO
+
+#endif
 
 
 //下面定义的宏, 用来生成模板特化
@@ -208,18 +184,18 @@ namespace Internal
    如果对它们专门特化, 生成的特化版本就太多了, 另外也会额外引入一些宏名字
 */
 
-#ifndef CALLABLE_MEMBER_CALL_CV
-#define CALLABLE_MEMBER_CALL_CV(FUNC, CONST_OPT) \
-	MEMBER_CALL_MACRO(FUNC, CONST_OPT, ) \
-	MEMBER_CALL_MACRO(FUNC, CONST_OPT, const) \
-	MEMBER_CALL_MACRO(FUNC, CONST_OPT, volatile) \
-	MEMBER_CALL_MACRO(FUNC, CONST_OPT, const volatile)
-#endif // !CALLABLE_MEMBER_CALL_CV
+#ifndef MEMBER_CALL_CV_MACRO
+#define MEMBER_CALL_CV_MACRO(FUNC) \
+	MEMBER_CALL_MACRO(FUNC, NON_PARAM) \
+	MEMBER_CALL_MACRO(FUNC, const) \
+	MEMBER_CALL_MACRO(FUNC, volatile) \
+	MEMBER_CALL_MACRO(FUNC, const volatile)
+#endif // !MEMBER_CALL_CV_MACRO
 
 }
 
 //类型值
-enum class CallableIdType
+enum class CallType
 {
     FUNCTION,
     POINTER_TO_FUNCTION,
@@ -234,39 +210,39 @@ result_t, 返回值类型；
 arg_tuple_t, 参数绑定成tuple的类型;
 arg_index_t, 参数的序列号类型, IntegerSequence<...>
 class_t, (只有成员函数指针和成员指针才定义), 类类型
-callable_id, 值,CallableIdType中定义的类型值
+call_type, 值,CallType中定义的类型值
  */
 template<class T, bool= std::is_class<T>::value>
 struct CallableTypeHelper;
 
 //函数类型特化
-#define FUNCTION_HELPER(CALL_OPT, NO_USE) \
+#define FUNCTION_HELPER(CALL_OPT) \
 template<class _RetType, class... _ArgType> \
 struct CallableTypeHelper<_RetType CALL_OPT (_ArgType...), false> \
 { \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
     using arg_index_t = typename MakeSequence<sizeof...(_ArgType)>::type; \
-    static const CallableIdType callable_id = CallableIdType::FUNCTION; \
+    static const CallType call_type = CallType::FUNCTION; \
 };
-NON_MEMBER_CALL_MACRO(FUNCTION_HELPER, )
+NON_MEMBER_CALL_MACRO(FUNCTION_HELPER)
 #undef FUNCTION_HELPER
 
 //函数指针类型特化
-#define POINTER_TO_FUNCTION_HELPER(CALL_OPT, NO_USE) \
+#define POINTER_TO_FUNCTION_HELPER(CALL_OPT) \
 template<class _RetType, class... _ArgType> \
 struct CallableTypeHelper<_RetType(CALL_OPT * )(_ArgType...), false> \
 { \
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
     using arg_index_t = typename MakeSequence<sizeof...(_ArgType)>::type; \
-    static const CallableIdType callable_id = CallableIdType::POINTER_TO_FUNCTION; \
+    static const CallType call_type = CallType::POINTER_TO_FUNCTION; \
 };
-NON_MEMBER_CALL_MACRO(POINTER_TO_FUNCTION_HELPER, )
+NON_MEMBER_CALL_MACRO(POINTER_TO_FUNCTION_HELPER)
 #undef POINTER_TO_FUNCTION_HELPER
 
 //成员函数指针类型特化
-#define POINTER_TO_MEMBER_FUNCTION_HELPER(CALL_OPT, NO_USE, CV_OPT) \
+#define POINTER_TO_MEMBER_FUNCTION_HELPER(CALL_OPT, CV_OPT) \
 template<class _RetType, class _ClassType, class... _ArgType> \
 struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT, false> \
 { \
@@ -274,9 +250,9 @@ struct CallableTypeHelper<_RetType(CALL_OPT _ClassType::* )(_ArgType...) CV_OPT,
     using result_t = _RetType; \
     using arg_tuple_t = std::tuple<_ArgType...>; \
     using arg_index_t = typename MakeSequence<sizeof...(_ArgType)>::type; \
-    static const CallableIdType callable_id = CallableIdType::POINTER_TO_MEMBER_FUNCTION; \
+    static const CallType call_type = CallType::POINTER_TO_MEMBER_FUNCTION; \
 };
-CALLABLE_MEMBER_CALL_CV(POINTER_TO_MEMBER_FUNCTION_HELPER, )
+MEMBER_CALL_CV_MACRO(POINTER_TO_MEMBER_FUNCTION_HELPER)
 #undef POINTER_TO_MEMBER_FUNCTION_HELPER
 
 //成员指针类型特化
@@ -287,7 +263,7 @@ struct CallableTypeHelper<_RetType _ClassType::*, false>
     using result_t = _RetType;
     using arg_tuple_t = std::tuple<>;
     using arg_index_t = typename MakeSequence<0>::type;
-    static const CallableIdType callable_id = CallableIdType::POINTER_TO_MEMBER_DATA;
+    static const CallType call_type = CallType::POINTER_TO_MEMBER_DATA;
 };
 
 //函数对象、Lambda表达式类型特化
@@ -298,11 +274,12 @@ struct CallableTypeHelper<T, true>
     using result_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::result_t;
     using arg_tuple_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::arg_tuple_t;
     using arg_index_t = typename CallableTypeHelper<decltype(&class_t::operator()), false>::arg_index_t;
-    static const CallableIdType callable_id = CallableIdType::FUNCTION_OBJECT;
+    static const CallType call_type = CallType::FUNCTION_OBJECT;
 };
 
+#undef NON_PARAM
 #undef NON_MEMBER_CALL_MACRO
 #undef MEMBER_CALL_MACRO
-#undef CALLABLE_MEMBER_CALL_CV
+#undef MEMBER_CALL_CV_MACRO
 
 SHARELIB_END_NAMESPACE
